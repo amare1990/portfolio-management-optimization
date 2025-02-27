@@ -214,3 +214,29 @@ class PortfolioAnalysis():
 
             print(f"Time series decomposition for {ticker} completed successfully!\n")
 
+    def calculate_key_metrics(self):
+        """
+        Calculate key financial metrics like VaR (Value at Risk) and Sharpe Ratio.
+        """
+        daily_returns = self.calculate_daily_pct_change()
+        # Value at Risk (VaR) - 1-day 99% confidence level
+        var_99 = np.percentile(daily_returns.dropna(), 1)
+        print(f"1-Day VaR at 99% Confidence Level: {var_99}%")
+
+        # Sharpe Ratio - Assuming risk-free rate is 0
+        sharpe_ratio = daily_returns.mean() / daily_returns.std() * np.sqrt(252)
+        print(f"Sharpe Ratio:\n {sharpe_ratio}")
+
+    def summarize_insights(self):
+        """
+        Document key insights like overall trends and risk metrics.
+        """
+        self.calculate_key_metrics()
+        print(f"\n{'*'*100}\n")
+        print("Key Insights:")
+        print(f"Overall direction of Tesla's stock price: {'Up' if self.data['Close TSLA'].iloc[-1] > self.data['Close TSLA'].iloc[0] else 'Down'}")
+        print("Fluctuations in daily returns and their impact have been considered in VaR and Sharpe ratio calculations.")
+
+        print(f"\n{'*'*100}\n")
+        print("Insights summarized successfully!")
+
