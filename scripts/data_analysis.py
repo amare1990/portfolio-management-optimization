@@ -6,9 +6,11 @@ import numpy as np
 import pandas as pd
 
 import matplotlib.pyplot as plt
+import seaborn as sns
 
 from sklearn.preprocessing import MinMaxScaler
 from scipy.stats import zscore
+from statsmodels.tsa.seasonal import seasonal_decompose
 
 
 BASE_DIR = "/home/am/Documents/Software Development/10_Academy Training/week-11/portfolio-management-optimization"
@@ -177,3 +179,38 @@ class PortfolioAnalysis():
       z_scores = zscore(daily_pct_change.dropna())
       outliers = np.where(np.abs(z_scores) > 3)
       print(f"Outliers detected at indices: {outliers}")
+
+      # Plot the boxplot
+      plt.figure(figsize=(12, 6))
+      sns.boxplot(data=daily_pct_change, orient='h', width=0.5)
+      plt.title("Boxplot of Daily Percentage Change (Detecting Outliers)")
+      plt.xlabel("Daily Percentage Change")
+      plt.savefig(f'{BASE_DIR}/plots/eda/boxplot_outliers.png')
+      plt.show()
+
+
+    def decompose_time_series(self):
+        """
+        Decompose the time series into trend, seasonal, and residual components.
+        """
+        print(f"\n{'*'*100}\n")
+        for ticker in self.tickers:
+            series = self.data[f'Close {ticker}']
+
+            print("\n")
+
+            # Check for zero and negative values
+            if np.any(series <= 0):
+                print(f"⚠️ {ticker} contains zero or negative values! Using additive model instead.\n")
+                decomposition = seasonal_decompose(series, model='additive', period=252)
+            else:
+                decomposition = seasonal_decompose(series, model='multiplicative', period=252)
+
+            decomposition.plot()
+            plt.title(f'{ticker} Time Series Decomposition')
+            plt.legend()
+            plt.savefig(f'{BASE_DIR}/plots/eda/time_series_decomposition_{ticker}.png')
+            plt.show()
+
+            print(f"Time series decomposition for {ticker} completed successfully!\n")
+
