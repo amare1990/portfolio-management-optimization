@@ -1,0 +1,28 @@
+# Ignore environmental variables
+.env
+
+# Ignore python and jupyter notebook cache files
+v-portfolio/
+__pycache__/
+*.pyc
+*.pyo
+.ipynb_checkpoints/
+
+# Ignore Jupyter Notebook checkpoints, i.e., automatically generated
+notebooks/.ipynb_checkpoints/
+
+# Ignore all plot-related directories in the notebooks folder I created to store diagrams and charts
+notebooks/plots/
+
+# Ignore data
+data/
+
+
+# Ignore saved models
+*.h5
+*.pt
+*.pkl
+models/
+checkpoints/
+
+
