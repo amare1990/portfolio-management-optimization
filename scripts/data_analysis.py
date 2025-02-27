@@ -5,7 +5,12 @@ import yfinance as yf
 import numpy as np
 import pandas as pd
 
+import matplotlib.pyplot as plt
+
 from sklearn.preprocessing import MinMaxScaler
+
+
+BASE_DIR = "/home/am/Documents/Software Development/10_Academy Training/week-11/portfolio-management-optimization"
 
 
 class PortfolioAnalysis():
@@ -20,11 +25,15 @@ class PortfolioAnalysis():
         """
         Fetch the historical stock data for each ticker from Yahoo Finance.
         """
-        data = yf.download(self.tickers, self.start_date, self.end_date)
-        # Select columns and flatten the multi-index columns
-        data = data[['Open', 'High', 'Low', 'Close', 'Volume']]
-        # Flatten columns
-        data.columns = data.columns.map(' '.join).str.strip()
+        data = yf.download(self.tickers, start=self.start_date, end=self.end_date)
+
+        # Flatten the multi-index columns
+        data.columns = [' '.join(col).strip() if isinstance(col, tuple) else col for col in data.columns]
+
+        # Select only the required columns
+        selected_columns = [col for col in data.columns if any(field in col for field in ['Open', 'High', 'Low', 'Close', 'Volume'])]
+        data = data[selected_columns]
+
         return data
 
     def save_raw_data(self, save_path):
@@ -69,20 +78,12 @@ class PortfolioAnalysis():
         scaler = MinMaxScaler()
 
         # Identify ticker-specific column names dynamically
-        tickers = self.tickers if isinstance(
-            self.tickers, list) else [self.tickers]
-        columns_to_normalize = []
-
-        for ticker in tickers:
-            for col in ["Open", "High", "Low", "Close"]:
-                col_name = f"{col} {ticker}"
-                if col_name in self.data.columns:
-                    columns_to_normalize.append(col_name)
+        tickers = self.tickers if isinstance(self.tickers, list) else [self.tickers]
+        columns_to_normalize = [col for col in self.data.columns if any(field in col for field in ["Open", "High", "Low", "Close"])]
 
         # Apply MinMaxScaler only on available columns
         if columns_to_normalize:
-            self.data[columns_to_normalize] = scaler.fit_transform(
-                self.data[columns_to_normalize])
+            self.data[columns_to_normalize] = scaler.fit_transform(self.data[columns_to_normalize])
         else:
             print("⚠️ No matching columns found for normalization.")
 
@@ -90,3 +91,77 @@ class PortfolioAnalysis():
         """Saving preprocessed data."""
         self.data.to_csv(save_path)
         print(f"Preprocessed data saved successfully as {save_path}.")
+
+    def perform_eda(self):
+        """
+        Perform Exploratory Data Analysis including visualization and volatility analysis.
+        """
+        self.visualize_data()
+        self.calculate_daily_pct_change()
+        self.analyze_volatility()
+
+        print("Performing EDA completed successfully!")
+        print(f"\n{'*'*100}\n")
+
+    def visualize_data(self):
+        """
+        Visualize the closing price and other key metrics.
+        """
+        plt.figure(figsize=(12, 6))
+        for ticker in self.tickers:
+            col_name = f"Close {ticker}"
+            if col_name in self.data.columns:
+                self.data[col_name].plot(label=f'{ticker} Close Price')
+            else:
+                print(f"⚠️ {col_name} not found in data!")
+
+        plt.title('Closing Price of Assets Over Time')
+        plt.legend()
+        plt.savefig(f'{BASE_DIR}/plots/eda/closing_price.png')
+        plt.grid(True)
+        plt.show()
+
+
+    def calculate_daily_pct_change(self):
+        """
+        Calculate daily percentage change to observe volatility.
+        """
+        close_columns = [col for col in self.data.columns if "Close" in col]
+
+        if close_columns:
+            daily_pct_change = self.data[close_columns].pct_change() * 100
+            plt.figure(figsize=(12, 6))
+            daily_pct_change.plot()
+            plt.title('Daily Percentage Change in Closing Price')
+            plt.legend()
+            plt.savefig(f'{BASE_DIR}/plots/eda/daily_pct_change.png')
+            plt.grid(True)
+            plt.show()
+            return daily_pct_change
+        else:
+            print("⚠️ No 'Close' price columns found!")
+            return None
+
+
+    def analyze_volatility(self):
+        """
+        Analyze the volatility by calculating rolling means and standard deviations.
+        """
+        rolling_window = 30  # 30 days rolling window for volatility analysis
+        for ticker in self.tickers:
+            col_name = f"Close {ticker}"
+            if col_name in self.data.columns:
+                rolling_mean = self.data[col_name].rolling(window=rolling_window).mean()
+                rolling_std = self.data[col_name].rolling(window=rolling_window).std()
+
+                plt.figure(figsize=(12, 6))
+                self.data[col_name].plot(label=f'{ticker} Close Price')
+                rolling_mean.plot(label=f'{ticker} 30-day Rolling Mean', linestyle='--')
+                rolling_std.plot(label=f'{ticker} 30-day Rolling Std Dev', linestyle=':')
+                plt.title(f'{ticker} Volatility and Rolling Statistics')
+                plt.legend()
+                plt.savefig(f'{BASE_DIR}/plots/eda/volatility_{ticker}.png')
+                plt.grid(True)
+                plt.show()
+            else:
+                print(f"⚠️ {col_name} not found in data!")
