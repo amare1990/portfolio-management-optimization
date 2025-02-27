@@ -2,6 +2,12 @@
 
 import yfinance as yf
 
+import numpy as np
+import pandas as pd
+
+from sklearn.preprocessing import MinMaxScaler
+
+
 
 
 
@@ -23,23 +29,36 @@ class PortfolioAnalysis():
     return data
 
   def clean_data(self):
-        """
-        Clean the data by checking for missing values, ensuring correct data types,
-        and handling missing values.
-        """
-        # Check for missing values and handle them
-        missing_data = self.data.isnull().sum()
-        print(f"Missing Data:\n{missing_data}\n")
+      """
+      Clean the data by checking for missing values, ensuring correct data types,
+      and handling missing values.
+      """
+      # Check for missing values and handle them
+      missing_data = self.data.isnull().sum()
+      print(f"Missing Data:\n{missing_data}\n")
 
-        # Handle missing values - filling with forward fill for simplicity
-        self.data.fillna(method='ffill', inplace=True)
+      # Handle missing values - filling with forward fill for simplicity
+      self.data.fillna(method='ffill', inplace=True)
 
-        # Ensure all columns have appropriate data types
-        self.data = self.data.astype({
-            'Open': 'float64',
-            'High': 'float64',
-            'Low': 'float64',
-            'Close': 'float64',
-            # 'Adj Close': 'float64',
-            'Volume': 'int64'
-        })
+      # Ensure all columns have appropriate data types
+      self.data = self.data.astype({
+          'Open': 'float64',
+          'High': 'float64',
+          'Low': 'float64',
+          'Close': 'float64',
+          # 'Adj Close': 'float64',
+          'Volume': 'int64'
+      })
+
+  def normalize_data(self):
+      """
+      Normalize the data using MinMaxScaler for machine learning models.
+      """
+      scaler = MinMaxScaler()
+      self.data[['Open', 'High', 'Low', 'Close']] = scaler.fit_transform(
+            self.data[['Open', 'High', 'Low', 'Close']])
+
+
+
+
+
