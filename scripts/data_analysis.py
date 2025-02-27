@@ -8,6 +8,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 from sklearn.preprocessing import MinMaxScaler
+from scipy.stats import zscore
 
 
 BASE_DIR = "/home/am/Documents/Software Development/10_Academy Training/week-11/portfolio-management-optimization"
@@ -99,6 +100,7 @@ class PortfolioAnalysis():
         self.visualize_data()
         self.calculate_daily_pct_change()
         self.analyze_volatility()
+        self.detect_outliers()
 
         print("Performing EDA completed successfully!")
         print(f"\n{'*'*100}\n")
@@ -165,3 +167,13 @@ class PortfolioAnalysis():
                 plt.show()
             else:
                 print(f"⚠️ {col_name} not found in data!")
+
+
+    def detect_outliers(self):
+      """
+      Detect outliers in the daily returns using z-scores.
+      """
+      daily_pct_change = self.calculate_daily_pct_change()
+      z_scores = zscore(daily_pct_change.dropna())
+      outliers = np.where(np.abs(z_scores) > 3)
+      print(f"Outliers detected at indices: {outliers}")
