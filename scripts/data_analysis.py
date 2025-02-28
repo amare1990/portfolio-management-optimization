@@ -3,7 +3,6 @@
 import yfinance as yf
 
 import numpy as np
-import pandas as pd
 
 import matplotlib.pyplot as plt
 import seaborn as sns
@@ -28,13 +27,24 @@ class PortfolioAnalysis():
         """
         Fetch the historical stock data for each ticker from Yahoo Finance.
         """
-        data = yf.download(self.tickers, start=self.start_date, end=self.end_date)
+        data = yf.download(
+            self.tickers,
+            start=self.start_date,
+            end=self.end_date)
 
         # Flatten the multi-index columns
-        data.columns = [' '.join(col).strip() if isinstance(col, tuple) else col for col in data.columns]
+        data.columns = [' '.join(col).strip() if isinstance(
+            col, tuple) else col for col in data.columns]
 
         # Select only the required columns
-        selected_columns = [col for col in data.columns if any(field in col for field in ['Open', 'High', 'Low', 'Close', 'Volume'])]
+        selected_columns = [
+            col for col in data.columns if any(
+                field in col for field in [
+                    'Open',
+                    'High',
+                    'Low',
+                    'Close',
+                    'Volume'])]
         data = data[selected_columns]
 
         return data
@@ -81,12 +91,17 @@ class PortfolioAnalysis():
         scaler = MinMaxScaler()
 
         # Identify ticker-specific column names dynamically
-        tickers = self.tickers if isinstance(self.tickers, list) else [self.tickers]
-        columns_to_normalize = [col for col in self.data.columns if any(field in col for field in ["Open", "High", "Low", "Close"])]
+        _ = self.tickers if isinstance(
+            self.tickers, list) else [self.tickers]
+        columns_to_normalize = [
+            col for col in self.data.columns if any(
+                field in col for field in [
+                    "Open", "High", "Low", "Close"])]
 
         # Apply MinMaxScaler only on available columns
         if columns_to_normalize:
-            self.data[columns_to_normalize] = scaler.fit_transform(self.data[columns_to_normalize])
+            self.data[columns_to_normalize] = scaler.fit_transform(
+                self.data[columns_to_normalize])
         else:
             print("⚠️ No matching columns found for normalization.")
 
@@ -121,10 +136,12 @@ class PortfolioAnalysis():
 
         plt.title('Closing Price of Assets Over Time')
         plt.legend()
-        plt.savefig(f'{BASE_DIR}/plots/eda/closing_price.png')
-        plt.grid(True)
+        plt.savefig(
+            f'{BASE_DIR}/notebooks/plots/eda/closing_price.png',
+            dpi=300,
+            bbox_inches='tight'
+        )
         plt.show()
-
 
     def calculate_daily_pct_change(self):
         """
@@ -138,14 +155,16 @@ class PortfolioAnalysis():
             daily_pct_change.plot()
             plt.title('Daily Percentage Change in Closing Price')
             plt.legend()
-            plt.savefig(f'{BASE_DIR}/plots/eda/daily_pct_change.png')
-            plt.grid(True)
+            plt.savefig(
+                f'{BASE_DIR}/notebooks/plots/eda/daily_pct_change.png',
+                dpi=300,
+                bbox_inches='tight'
+            )
             plt.show()
             return daily_pct_change
         else:
             print("⚠️ No 'Close' price columns found!")
             return None
-
 
     def analyze_volatility(self):
         """
@@ -155,39 +174,50 @@ class PortfolioAnalysis():
         for ticker in self.tickers:
             col_name = f"Close {ticker}"
             if col_name in self.data.columns:
-                rolling_mean = self.data[col_name].rolling(window=rolling_window).mean()
-                rolling_std = self.data[col_name].rolling(window=rolling_window).std()
+                rolling_mean = self.data[col_name].rolling(
+                    window=rolling_window).mean()
+                rolling_std = self.data[col_name].rolling(
+                    window=rolling_window).std()
 
                 plt.figure(figsize=(12, 6))
                 self.data[col_name].plot(label=f'{ticker} Close Price')
-                rolling_mean.plot(label=f'{ticker} 30-day Rolling Mean', linestyle='--')
-                rolling_std.plot(label=f'{ticker} 30-day Rolling Std Dev', linestyle=':')
+                rolling_mean.plot(
+                    label=f'{ticker} 30-day Rolling Mean',
+                    linestyle='--')
+                rolling_std.plot(
+                    label=f'{ticker} 30-day Rolling Std Dev',
+                    linestyle=':')
                 plt.title(f'{ticker} Volatility and Rolling Statistics')
                 plt.legend()
-                plt.savefig(f'{BASE_DIR}/plots/eda/volatility_{ticker}.png')
-                plt.grid(True)
+                plt.savefig(
+                    f'{BASE_DIR}/notebooks/plots/eda/volatility_{ticker}.png',
+                    dpi=300,
+                    bbox_inches='tight'
+                )
                 plt.show()
             else:
                 print(f"⚠️ {col_name} not found in data!")
 
-
     def detect_outliers(self):
-      """
-      Detect outliers in the daily returns using z-scores.
-      """
-      daily_pct_change = self.calculate_daily_pct_change()
-      z_scores = zscore(daily_pct_change.dropna())
-      outliers = np.where(np.abs(z_scores) > 3)
-      print(f"Outliers detected at indices: {outliers}")
+        """
+        Detect outliers in the daily returns using z-scores.
+        """
+        daily_pct_change = self.calculate_daily_pct_change()
+        z_scores = zscore(daily_pct_change.dropna())
+        outliers = np.where(np.abs(z_scores) > 3)
+        print(f"Outliers detected at indices: {outliers}")
 
-      # Plot the boxplot
-      plt.figure(figsize=(12, 6))
-      sns.boxplot(data=daily_pct_change, orient='h', width=0.5)
-      plt.title("Boxplot of Daily Percentage Change (Detecting Outliers)")
-      plt.xlabel("Daily Percentage Change")
-      plt.savefig(f'{BASE_DIR}/plots/eda/boxplot_outliers.png')
-      plt.show()
-
+        # Plot the boxplot
+        plt.figure(figsize=(12, 6))
+        sns.boxplot(data=daily_pct_change, orient='h', width=0.5)
+        plt.title("Boxplot of Daily Percentage Change (Detecting Outliers)")
+        plt.xlabel("Daily Percentage Change")
+        plt.savefig(
+            f'{BASE_DIR}/notebooks/plots/eda/boxplot_outliers.png',
+            dpi=300,
+            bbox_inches='tight'
+        )
+        plt.show()
 
     def decompose_time_series(self):
         """
@@ -201,18 +231,26 @@ class PortfolioAnalysis():
 
             # Check for zero and negative values
             if np.any(series <= 0):
-                print(f"⚠️ {ticker} contains zero or negative values! Using additive model instead.\n")
-                decomposition = seasonal_decompose(series, model='additive', period=252)
+                print(
+                    f"⚠️ {ticker} contains zero or negative values! Using additive model instead.\n")
+                decomposition = seasonal_decompose(
+                    series, model='additive', period=252)
             else:
-                decomposition = seasonal_decompose(series, model='multiplicative', period=252)
+                decomposition = seasonal_decompose(
+                    series, model='multiplicative', period=252)
 
             decomposition.plot()
             plt.title(f'{ticker} Time Series Decomposition')
             plt.legend()
-            plt.savefig(f'{BASE_DIR}/plots/eda/time_series_decomposition_{ticker}.png')
+            plt.savefig(
+                f'{BASE_DIR}/notebooks/plots/eda/time_series_decomposition_{ticker}.png',
+                dpi=300,
+                bbox_inches='tight'
+            )
             plt.show()
 
-            print(f"Time series decomposition for {ticker} completed successfully!\n")
+            print(
+                f"Time series decomposition for {ticker} completed successfully!\n")
 
     def calculate_key_metrics(self):
         """
@@ -234,9 +272,9 @@ class PortfolioAnalysis():
         self.calculate_key_metrics()
         print(f"\n{'*'*100}\n")
         print("Key Insights:")
-        print(f"Overall direction of Tesla's stock price: {'Up' if self.data['Close TSLA'].iloc[-1] > self.data['Close TSLA'].iloc[0] else 'Down'}")
+        print(
+            f"Overall direction of Tesla's stock price: {'Up' if self.data['Close TSLA'].iloc[-1] > self.data['Close TSLA'].iloc[0] else 'Down'}")
         print("Fluctuations in daily returns and their impact have been considered in VaR and Sharpe ratio calculations.")
 
         print(f"\n{'*'*100}\n")
-        print("Insights summarized successfully!")
-
+        print("Key Insights summarized successfully!")
