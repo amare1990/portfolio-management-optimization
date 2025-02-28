@@ -15,24 +15,28 @@ from tensorflow.keras.layers import LSTM, Dense
 
 # Define the StockForecasting class
 class StockForecasting:
-    def __init__(self, processed_data):
+    def __init__(self, processed_data, ticker):
         self.data = processed_data
+        self.ticker = ticker
+
 
 
     def retrieve_data_by_ticker(self, ticker, inplace=False):
-        """Will filter data by tickers."""
-        if ticker in self.data.columns:
-            # Filter columns that contain the ticker name (e.g., 'Tsla')
-            filter_columns = [col for col in self.data.columns if ticker in col]
+        """Will filter data by tickers and rename columns appropriately."""
 
+        keep_columns = [f'Close {self.ticker}', f'High {self.ticker}', f'Low {self.ticker}', f'Open {self.ticker}', f'Volume {self.ticker}']
+
+        if keep_columns:
+            self.data = self.data[keep_columns]
             # If inplace is True, update self.data in place
             if inplace:
-                self.data = self.data[filter_columns]
+                self.data = self.data[keep_columns]
             else:
                 # If inplace is False, return the filtered data
-                return self.data[filter_columns]
+                return self.data[keep_columns]
         else:
-            raise ValueError(f"Ticker {ticker} not found in data columns.")
+            raise ValueError(f"{keep_columns} not found in data columns.")
+
 
 
 
@@ -42,29 +46,38 @@ class StockForecasting:
         train_size = int(len(self.data) * 0.8)
         self.train_data, self.test_data = self.data[:train_size], self.data[train_size:]
 
-        self.train_data = pd.DataFrame(self.train_data, columns=['Close'])
-        self.test_data = pd.DataFrame(self.test_data, columns=['Close'])
+
+        self.train_data = self.train_data[[f'Close {self.ticker}']]
+        self.test_data = self.test_data[[f'Close {self.ticker}']]
+
+        print("Train data columns:", self.train_data.columns)
+        print("Test data columns:", self.test_data.columns)
+
+
 
 
     def arima_model(self):
         """
         Fit an ARIMA model on the stock data.
         """
-        model = ARIMA(self.data['Close'], order=(5, 1, 0))  # Example parameters
+        model = ARIMA(self.data[f'Close {self.ticker}'], order=(5, 1, 0))
         self.arima_model = model.fit()
 
     def forecast_arima(self):
         """
         Forecast future stock prices using the ARIMA model.
         """
-        forecast = self.arima_model.forecast(steps=len(self.test_data))
-        return forecast
+        forecast = self.arima_model.predict(start=len(self.train_data), end=len(self.data)-1)
+        # **Fix: Return forecast as a pandas Series with the correct column name**
+        return pd.Series(forecast, index=self.test_data.index, name=f'Close {self.ticker}')
+
 
     def sarima_model(self):
         """
         Fit a SARIMA model on the stock data.
         """
-        model = SARIMAX(self.data['Close'], order=(5, 1, 0), seasonal_order=(1, 1, 0, 5))  # Example parameters
+        # Modify the seasonal_order and order to avoid conflict in AR lags
+        model = SARIMAX(self.data[f'Close {self.ticker}'], order=(5, 1, 0), seasonal_order=(1, 1, 0, 12))  # Example: Changed the seasonal period to 12
         self.sarima_model = model.fit()
 
     def forecast_sarima(self):
@@ -72,29 +85,10 @@ class StockForecasting:
         Forecast future stock prices using the SARIMA model.
         """
         forecast = self.sarima_model.forecast(steps=len(self.test_data))
-        return forecast
+        # **Fix: Return forecast as a pandas Series with the correct column name**
+        return pd.Series(forecast, index=self.test_data.index, name=f'Close {self.ticker}')
 
 
-    def create_lstm_data(self, look_back=60):
-        """
-        Prepare the data for LSTM by creating time series sequences.
-        """
-        X_train, y_train, X_test, y_test = [], [], [], []
-
-        for i in range(look_back, len(self.train_data)):
-            X_train.append(self.train_data['Close'].iloc[i-look_back:i].values)
-            y_train.append(self.train_data['Close'].iloc[i])
-
-        for i in range(look_back, len(self.test_data)):
-            X_test.append(self.test_data['Close'].iloc[i-look_back:i].values)
-            y_test.append(self.test_data['Close'].iloc[i])
-
-        # Reshape for LSTM input
-        X_train, X_test = np.array(X_train), np.array(X_test)
-        X_train = X_train.reshape((X_train.shape[0], X_train.shape[1], 1))
-        X_test = X_test.reshape((X_test.shape[0], X_test.shape[1], 1))
-
-        return X_train, y_train, X_test, y_test
 
 
     def build_lstm_model(self, look_back=60):
@@ -108,11 +102,26 @@ class StockForecasting:
         model.compile(optimizer='adam', loss='mean_squared_error')
         return model
 
+
+    def create_lstm_data(self, look_back):
+        X, y = [], []
+        for i in range(len(self.data) - look_back - 1):
+            X.append(self.data.iloc[i:(i + look_back), 0].values)
+            y.append(self.data.iloc[i + look_back, 0])
+        return np.array(X), np.array(y)
+
     def train_lstm(self, look_back=60, epochs=5, batch_size=32):
         """
         Train the LSTM model.
         """
-        X_train, y_train, X_test, y_test = self.create_lstm_data(look_back)
+        X, y = self.create_lstm_data(look_back)
+
+        # Split into training and test sets
+        train_size = int(len(X) * 0.8)
+        X_train, X_test = X[:train_size], X[train_size:]
+        y_train, y_test = y[:train_size], y[train_size:]
+
+
         model = self.build_lstm_model(look_back)
 
         model.fit(X_train, y_train, epochs=epochs, batch_size=batch_size)
@@ -124,11 +133,12 @@ class StockForecasting:
         Forecast future stock prices using the trained LSTM model.
         """
         predicted_stock_price = self.lstm_model.predict(self.X_test)
-        predicted_stock_price = self.scaler.inverse_transform(predicted_stock_price)
-        actual_stock_price = self.scaler.inverse_transform(self.y_test.reshape(-1, 1))
+        # Remove inverse_transform as data is already scaled in preprocessing
+        # predicted_stock_price = self.scaler.inverse_transform(predicted_stock_price)
+        # actual_stock_price = self.scaler.inverse_transform(self.y_test.reshape(-1, 1))
+        actual_stock_price = self.y_test.reshape(-1, 1)  # Reshape y_test for consistency
 
         return predicted_stock_price, actual_stock_price
-
 
     def evaluate_model(self, actual, predicted):
         """
@@ -145,8 +155,8 @@ class StockForecasting:
         """
         Optimize ARIMA model parameters using auto_arima from pmdarima.
         """
-        model = auto_arima(self.data['Close'], seasonal=True, m=5, trace=True, suppress_warnings=True)
-        self.best_arima_model = model.fit(self.data['Close'])
+        model = auto_arima(self.data[f'Close {self.ticker}'], seasonal=True, m=5, trace=True, suppress_warnings=True)
+        self.best_arima_model = model.fit(self.data[f'Close {self.ticker}'])
 
 
     def compare_models(self):
@@ -160,13 +170,8 @@ class StockForecasting:
 
         print("Evaluating ARIMA Model:")
         arima_forecast = self.forecast_arima()
-        arima_mae, arima_rmse, arima_mape = self.evaluate_model(self.test_data, arima_forecast)
+        arima_mae, arima_rmse, arima_mape = self.evaluate_model(self.test_data[f'Close {self.ticker}'], arima_forecast)
         print(f"ARIMA Model - MAE: {arima_mae}, RMSE: {arima_rmse}, MAPE: {arima_mape}")
-
-        print("Evaluating SARIMA Model:")
-        sarima_forecast = self.forecast_sarima()
-        sarima_mae, sarima_rmse, sarima_mape = self.evaluate_model(self.test_data, sarima_forecast)
-        print(f"SARIMA Model - MAE: {sarima_mae}, RMSE: {sarima_rmse}, MAPE: {sarima_mape}")
 
 
 

@@ -279,32 +279,13 @@ The `StockForecasting` class enables forecasting of stock prices using different
 - **compare_models()**:
   Compares the forecast performance of all models (ARIMA, SARIMA, and LSTM) by calculating and displaying MAE, RMSE, and MAPE for each.
 
-#### Usage Example
+#### Usage
 
+- To run and view each process of the stcok foracsting, open stock-forcaster.ipnb and run it
 ```python
-# Load processed data and define ticker symbol
-processed_data = pd.read_csv('stock_data.csv')
-ticker = 'AAPL'
+To see end -to-end result
+python src/src.py
 
-# Create StockForecasting object
-stock_forecasting = StockForecasting(processed_data, ticker)
-
-# Retrieve and filter data
-stock_forecasting.retrieve_data_by_ticker(ticker)
-
-# Split data into train and test sets
-stock_forecasting.split_data()
-
-# Train and forecast using ARIMA
-stock_forecasting.arima_model()
-arima_forecast = stock_forecasting.forecast_arima()
-
-# Train and forecast using LSTM
-stock_forecasting.train_lstm()
-predicted_lstm, actual_lstm = stock_forecasting.forecast_lstm()
-
-# Evaluate and compare models
-stock_forecasting.compare_models()
 ```
 
 #### Evaluation
