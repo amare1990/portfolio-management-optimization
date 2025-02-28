@@ -4,6 +4,7 @@ import numpy as np
 import pandas as pd
 
 from statsmodels.tsa.arima.model import ARIMA
+from statsmodels.tsa.statespace.sarimax import SARIMAX
 
 # Define the StockForecasting class
 class StockForecasting:
@@ -23,6 +24,20 @@ class StockForecasting:
         Forecast future stock prices using the ARIMA model.
         """
         forecast = self.arima_model.forecast(steps=len(self.test_data))
+        return forecast
+
+    def sarima_model(self):
+        """
+        Fit a SARIMA model on the stock data.
+        """
+        model = SARIMAX(self.data['Close'], order=(5, 1, 0), seasonal_order=(1, 1, 0, 5))  # Example parameters
+        self.sarima_model = model.fit()
+
+    def forecast_sarima(self):
+        """
+        Forecast future stock prices using the SARIMA model.
+        """
+        forecast = self.sarima_model.forecast(steps=len(self.test_data))
         return forecast
 
 
