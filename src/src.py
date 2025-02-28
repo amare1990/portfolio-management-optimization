@@ -3,6 +3,8 @@
 import os
 import sys
 
+import pandas as pd
+
 import warnings
 warnings.filterwarnings('ignore')
 
@@ -15,6 +17,7 @@ sys.path.append(ROOT_DIR)
 print(f'Root direc: {ROOT_DIR}')
 
 from scripts.data_analysis import PortfolioAnalysis
+from scripts.stock_forcasting import StockForecasting
 
 
 BASE_DIR = "/home/am/Documents/Software Development/10_Academy Training/week-11/portfolio-management-optimization"
@@ -47,3 +50,21 @@ if __name__ == "__main__":
     print(f"\n{'*'*100}\n")
 
     portfolio_analysis.summarize_insights()
+
+    # Pipeline to run stock forcasting processes
+    preprocessed_data = pd.read_csv(f"{BASE_DIR}/data/preprocessed_data.csv", index_col=0)
+    ticker = "TSLA"
+    stock_forecasting = StockForecasting(preprocessed_data, ticker)
+    stock_forecasting.retrieve_data_by_ticker(ticker, inplace=True)
+    stock_forecasting.split_data()
+
+    # Train models
+    stock_forecasting.arima_model()
+    stock_forecasting.sarima_model()
+    stock_forecasting.train_lstm(look_back=60, epochs=10, batch_size=32)
+
+    # Optimize ARIMA
+    stock_forecasting.optimize_arima()
+
+    # Compare models
+    stock_forecasting.compare_models()
