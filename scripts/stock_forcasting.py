@@ -6,6 +6,9 @@ import pandas as pd
 from statsmodels.tsa.arima.model import ARIMA
 from statsmodels.tsa.statespace.sarimax import SARIMAX
 
+from sklearn.metrics import mean_absolute_error, mean_absolute_percentage_error, mean_squared_error
+
+import tensorflow as tf
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import LSTM, Dense
 
@@ -29,7 +32,6 @@ class StockForecasting:
                 return self.data[filter_columns]
         else:
             raise ValueError(f"Ticker {ticker} not found in data columns.")
-
 
 
 
@@ -125,6 +127,17 @@ class StockForecasting:
         actual_stock_price = self.scaler.inverse_transform(self.y_test.reshape(-1, 1))
 
         return predicted_stock_price, actual_stock_price
+
+
+    def evaluate_model(self, actual, predicted):
+        """
+        Evaluate the model using MAE, RMSE, and MAPE metrics.
+        """
+        mae = mean_absolute_error(actual, predicted)
+        rmse = np.sqrt(mean_squared_error(actual, predicted))
+        mape = np.mean(np.abs((actual - predicted) / actual)) * 100
+
+        return mae, rmse, mape
 
 
 
