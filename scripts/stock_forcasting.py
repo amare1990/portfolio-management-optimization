@@ -5,6 +5,7 @@ import pandas as pd
 
 from statsmodels.tsa.arima.model import ARIMA
 from statsmodels.tsa.statespace.sarimax import SARIMAX
+from pmdarima import auto_arima
 
 from sklearn.metrics import mean_absolute_error, mean_absolute_percentage_error, mean_squared_error
 
@@ -138,6 +139,14 @@ class StockForecasting:
         mape = np.mean(np.abs((actual - predicted) / actual)) * 100
 
         return mae, rmse, mape
+
+
+    def optimize_arima(self):
+        """
+        Optimize ARIMA model parameters using auto_arima from pmdarima.
+        """
+        model = auto_arima(self.data['Close'], seasonal=True, m=5, trace=True, suppress_warnings=True)
+        self.best_arima_model = model.fit(self.data['Close'])
 
 
 
