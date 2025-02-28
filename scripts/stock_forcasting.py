@@ -149,5 +149,25 @@ class StockForecasting:
         self.best_arima_model = model.fit(self.data['Close'])
 
 
+    def compare_models(self):
+        """
+        Compare the forecasts from all models.
+        """
+        print("Evaluating LSTM Model:")
+        predicted_lstm, actual_lstm = self.forecast_lstm()
+        lstm_mae, lstm_rmse, lstm_mape = self.evaluate_model(actual_lstm, predicted_lstm)
+        print(f"LSTM Model - MAE: {lstm_mae}, RMSE: {lstm_rmse}, MAPE: {lstm_mape}")
+
+        print("Evaluating ARIMA Model:")
+        arima_forecast = self.forecast_arima()
+        arima_mae, arima_rmse, arima_mape = self.evaluate_model(self.test_data, arima_forecast)
+        print(f"ARIMA Model - MAE: {arima_mae}, RMSE: {arima_rmse}, MAPE: {arima_mape}")
+
+        print("Evaluating SARIMA Model:")
+        sarima_forecast = self.forecast_sarima()
+        sarima_mae, sarima_rmse, sarima_mape = self.evaluate_model(self.test_data, sarima_forecast)
+        print(f"SARIMA Model - MAE: {sarima_mae}, RMSE: {sarima_rmse}, MAPE: {sarima_mape}")
+
+
 
 
