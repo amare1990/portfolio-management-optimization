@@ -32,6 +32,8 @@ portfolio-management-optimization/
 │── scripts/                        # Python scripts for different modules
     ├── __init__.py
 │   ├── data_analysis.py            # Data downloading, cleaning, analysis, normalization, and EDA
+│   ├── stock_forcatsing.py            # Forcasting closing prices of TSLA for the next 30 days using ARIMA, SARIMA, LSTM
+
 │
 │── src/                            # Main automation script
     ├── __init__.py
@@ -228,8 +230,94 @@ python src/src.py
 - Visualizations of price trends, volatility, and outliers.
 - Computed VaR and Sharpe Ratio for risk assessment.
 
+
+
+### 2. Stock Forecasting
+
+This section covers the implementation of time-series forecasting using various statistical and machine learning models. The primary goal is to predict stock prices based on historical data using methods like ARIMA, SARIMA, and LSTM.
+
+#### Overview of StockForecasting Class
+
+The `StockForecasting` class enables forecasting of stock prices using different approaches. It integrates data preprocessing, model training, and evaluation functionalities. The class supports the following models:
+
+1. **ARIMA (AutoRegressive Integrated Moving Average)**: A traditional statistical method for time-series forecasting.
+2. **SARIMA (Seasonal ARIMA)**: An extension of ARIMA that accounts for seasonal patterns in the data.
+3. **LSTM (Long Short-Term Memory)**: A deep learning model that is particularly effective in capturing patterns in sequential data.
+
+#### Key Methods
+
+- **retrieve_data_by_ticker(ticker, inplace=False)**:
+  This method filters the stock data by ticker and renames columns appropriately for further processing.
+
+- **split_data()**:
+  Splits the data into training and testing sets (80% training, 20% testing), focusing on the 'Close' price for the given ticker.
+
+- **arima_model() & forecast_arima()**:
+  Fits an ARIMA model to the stock data and forecasts future stock prices.
+
+- **sarima_model() & forecast_sarima()**:
+  Fits a SARIMA model and forecasts future prices, accounting for seasonal variations.
+
+- **build_lstm_model()**:
+  Constructs an LSTM model for stock price prediction with adjustable input size and layers.
+
+- **create_lstm_data()**:
+  Prepares the data to be fed into the LSTM model by creating sequences of past stock prices.
+
+- **train_lstm()**:
+  Trains the LSTM model using the prepared data and specified training parameters (e.g., look-back period, number of epochs, and batch size).
+
+- **forecast_lstm()**:
+  Makes stock price predictions using the trained LSTM model.
+
+- **evaluate_model()**:
+  Evaluates the model performance using several metrics: Mean Absolute Error (MAE), Root Mean Squared Error (RMSE), and Mean Absolute Percentage Error (MAPE).
+
+- **optimize_arima()**:
+  Optimizes ARIMA parameters using the `auto_arima` function from the `pmdarima` package to improve forecast accuracy.
+
+- **compare_models()**:
+  Compares the forecast performance of all models (ARIMA, SARIMA, and LSTM) by calculating and displaying MAE, RMSE, and MAPE for each.
+
+#### Usage Example
+
+```python
+# Load processed data and define ticker symbol
+processed_data = pd.read_csv('stock_data.csv')
+ticker = 'AAPL'
+
+# Create StockForecasting object
+stock_forecasting = StockForecasting(processed_data, ticker)
+
+# Retrieve and filter data
+stock_forecasting.retrieve_data_by_ticker(ticker)
+
+# Split data into train and test sets
+stock_forecasting.split_data()
+
+# Train and forecast using ARIMA
+stock_forecasting.arima_model()
+arima_forecast = stock_forecasting.forecast_arima()
+
+# Train and forecast using LSTM
+stock_forecasting.train_lstm()
+predicted_lstm, actual_lstm = stock_forecasting.forecast_lstm()
+
+# Evaluate and compare models
+stock_forecasting.compare_models()
+```
+
+#### Evaluation
+
+Model evaluation is performed using three key metrics:
+- **Mean Absolute Error (MAE)**: Measures the average magnitude of errors between predicted and actual values.
+- **Root Mean Squared Error (RMSE)**: Measures the square root of the average squared differences between predicted and actual values.
+- **Mean Absolute Percentage Error (MAPE)**: Measures the average percentage difference between predicted and actual values.
+
+---
+
+
 ## Future Enhancements
-- Forecast using statistical models and LSTM
 - Forecast Future Market Trends using forecasted data and built models
 - Optimize Portfolio Based on Forecast data
 
