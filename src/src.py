@@ -17,7 +17,7 @@ sys.path.append(ROOT_DIR)
 print(f'Root direc: {ROOT_DIR}')
 
 from scripts.data_analysis import PortfolioAnalysis
-from scripts.stock_forcasting import StockForecasting
+from scripts.stock_forecasting import StockForecasting
 
 
 BASE_DIR = "/home/am/Documents/Software Development/10_Academy Training/week-11/portfolio-management-optimization"
