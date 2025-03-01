@@ -13,6 +13,12 @@ import tensorflow as tf
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import LSTM, Dense
 
+import pickle
+from tensorflow.keras.models import load_model
+
+
+BASE_DIR = "/home/am/Documents/Software Development/10_Academy Training/week-11/portfolio-management-optimization"
+
 # Define the StockForecasting class
 class StockForecasting:
     def __init__(self, processed_data, ticker):
@@ -90,7 +96,6 @@ class StockForecasting:
 
 
 
-
     def build_lstm_model(self, look_back=60):
         """
         Build the LSTM model.
@@ -157,6 +162,29 @@ class StockForecasting:
         """
         model = auto_arima(self.data[f'Close {self.ticker}'], seasonal=True, m=5, trace=True, suppress_warnings=True)
         self.best_arima_model = model.fit(self.data[f'Close {self.ticker}'])
+
+    def save_model(self, model, filename):
+        """
+        Save a model using pickle (for ARIMA and SARIMA) or TensorFlow (for LSTM).
+        """
+        if isinstance(model, tf.keras.Model):
+            model.save(f"{BASE_DIR}/models/{filename}")  # Save LSTM model using TensorFlow
+        else:
+            with open(f"{BASE_DIR}/models/{filename}", 'wb') as file:
+                pickle.dump(model, file)
+        print(f"Model saved successfully as {BASE_DIR}/models/{filename}")
+
+
+
+    def save_all_models(self):
+        """
+        Save all trained models.
+        """
+        self.save_model(self.arima_model, "arima_model.pkl")
+        self.save_model(self.sarima_model, "sarima_model.pkl")
+        self.save_model(self.best_arima_model, "optimized_arima_model.pkl")
+        self.save_model(self.lstm_model, "lstm_model.h5")
+
 
 
     def compare_models(self):
