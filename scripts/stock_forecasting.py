@@ -14,7 +14,6 @@ from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import LSTM, Dense
 
 import pickle
-from tensorflow.keras.models import load_model
 
 
 BASE_DIR = "/home/am/Documents/Software Development/10_Academy Training/week-11/portfolio-management-optimization"
