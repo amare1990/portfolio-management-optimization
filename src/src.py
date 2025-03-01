@@ -66,5 +66,9 @@ if __name__ == "__main__":
     # Optimize ARIMA
     stock_forecasting.optimize_arima()
 
+
+    # Save all models
+    stock_forecasting.save_all_models()
+
     # Compare models
     stock_forecasting.compare_models()

@@ -234,11 +234,14 @@ python src/src.py
 
 ### 2. Stock Forecasting
 
-This section covers the implementation of time-series forecasting using various statistical and machine learning models. The primary goal is to predict stock prices based on historical data using methods like ARIMA, SARIMA, and LSTM.
+This section covers the implementation of time-series forecasting using various statistical and machine learning models.
+The primary goal is to predict stock prices based on historical data using methods like ARIMA, SARIMA, and LSTM.
 
 #### Overview of StockForecasting Class
 
-The `StockForecasting` class enables forecasting of stock prices using different approaches. It integrates data preprocessing, model training, and evaluation functionalities. The class supports the following models:
+The `StockForecasting` class enables forecasting of stock prices using different approaches.
+It integrates data preprocessing, model training, and evaluation functionalities.
+The class supports the following models:
 
 1. **ARIMA (AutoRegressive Integrated Moving Average)**: A traditional statistical method for time-series forecasting.
 2. **SARIMA (Seasonal ARIMA)**: An extension of ARIMA that accounts for seasonal patterns in the data.
