@@ -47,10 +47,13 @@ class ForecastFutureMarkets:
         """
         Load all saved models.
         """
+        print(f"\n{'='*100}")
+        print("Loading models...")
         self.arima_model = self.load_model("arima_model.pkl")
         self.sarima_model = self.load_model("sarima_model.pkl")
         self.best_arima_model = self.load_model("optimized_arima_model.pkl")
         self.lstm_model = self.load_model("lstm_model.h5")
+        print(f"\n{'='*100}")
 
 
   def forecast_arima(self, steps=180):
@@ -97,7 +100,7 @@ class ForecastFutureMarkets:
 
         return lstm_forecast
 
-  def visualize_forecast(self, forecast, model_name="Model"):
+  def visualize_forecast(self, forecast, model_name="ARIMA"):
         """ Visualize forecast alongside historical data. """
         plt.figure(figsize=(14, 7))
         plt.plot(self.data.index, self.data[f'Close {self.ticker}'], label="Historical Data", color='blue')
@@ -106,9 +109,10 @@ class ForecastFutureMarkets:
         plt.plot(forecast_index, forecast, label=f"Forecast - {model_name}", color='red')
         plt.xlabel("Date")
         plt.ylabel("Stock Price")
+        plt.title("Forecast and historical_data using {model_name}")
         plt.legend()
         plt.savefig(
-            f"{BASE_DIR}/plots/market_trends/{model_name}_forecast.png",
+            f"{BASE_DIR}/notebooks/plots/market_trends/{model_name}_forecast.png",
             dpi=300,
             bbox_inches='tight'
             )
