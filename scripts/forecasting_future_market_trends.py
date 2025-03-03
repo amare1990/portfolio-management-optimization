@@ -42,4 +42,11 @@ class Forecast_Future_Markets:
         self.lstm_model = self.load_model(f"{BASE_DIR}/models/lstm_model.h5")
 
 
+  def forecast_arima(self, steps=180):
+        """ Forecast future stock prices using the ARIMA model. """
+        forecast = self.arima_model.forecast(steps=steps)
 
+        print("Forecasting using ARIMA completed successfully!")
+        print(f"\n{'='*100}")
+
+        return pd.Series(forecast, name="ARIMA Forecast")
