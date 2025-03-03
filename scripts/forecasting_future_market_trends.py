@@ -14,7 +14,7 @@ BASE_DIR = "/home/am/Documents/Software Development/10_Academy Training/week-11/
 
 class ForecastFutureMarkets:
   def __init__(self, ticker, processed_file_path):
-    self.data = pd.read_csv(processed_file_path)
+    self.data = pd.read_csv(processed_file_path, index_col=0)
     # Convert index to DatetimeIndex
     self.data.index = pd.to_datetime(self.data.index)
     self.ticker = ticker
@@ -61,6 +61,8 @@ class ForecastFutureMarkets:
         forecast = self.arima_model.forecast(steps=steps)
 
         print("Forecasting using ARIMA completed successfully!")
+        print("Data forecast by ARIMA")
+        print(pd.Series(forecast, name="ARIMA Forecast").head())
         print(f"\n{'='*100}")
 
         return pd.Series(forecast, name="ARIMA Forecast")
@@ -69,6 +71,12 @@ class ForecastFutureMarkets:
         """ Forecast future stock prices using the SARIMA model. """
         forecast = self.sarima_model.get_forecast(steps=steps)
         conf_int = forecast.conf_int()
+
+        print("Forecast by SARIMA ...predicted mean")
+        print(forecast.predicted_mean)
+
+        print("Confidence interval by SARIMA")
+        print(conf_int)
 
         print("Forecasting using SARIMA completed successfully!")
         print(f"\n{'='*100}")
@@ -82,18 +90,22 @@ class ForecastFutureMarkets:
             print("LSTM model is not loaded. Please load the model first.")
             return None
 
-        inputs = self.data[f'Close {self.ticker}'].values.reshape(-1, 1)  # Ensure input is reshaped correctly
+        inputs = self.data[f'Close {self.ticker}'].values.reshape(-1, 1)
 
         lstm_forecast = []
 
         for _ in range(steps):
-            X_input = inputs[-60:].reshape((1, 60, 1))  # Ensure correct shape for LSTM
+            X_input = inputs[-60:].reshape((1, 60, 1))
             pred_price = self.lstm_model.predict(X_input)[0, 0]
             lstm_forecast.append(pred_price)
-            inputs = np.append(inputs, pred_price).reshape(-1, 1)  # Append new prediction
+            inputs = np.append(inputs, pred_price).reshape(-1, 1)
 
         # ✅ No need for inverse_transform since data is already standardized
         lstm_forecast = np.array(lstm_forecast).reshape(-1, 1)
+        lstm_forecast = pd.DataFrame(lstm_forecast)
+
+        print("Forecasts by LSTM")
+        print(lstm_forecast.head())
 
         print("Forecasting using LSTM completed successfully!")
         print(f"\n{'='*100}")
@@ -109,7 +121,7 @@ class ForecastFutureMarkets:
         plt.plot(forecast_index, forecast, label=f"Forecast - {model_name}", color='red')
         plt.xlabel("Date")
         plt.ylabel("Stock Price")
-        plt.title("Forecast and historical_data using {model_name}")
+        plt.title(f"Forecast and historical_data using {model_name}")
         plt.legend()
         plt.savefig(
             f"{BASE_DIR}/notebooks/plots/market_trends/{model_name}_forecast.png",
@@ -125,7 +137,9 @@ class ForecastFutureMarkets:
         if isinstance(forecast, np.ndarray):
             forecast = pd.Series(forecast.flatten())  # Flatten to 1D and convert to Series
 
-        trend = "Upward" if forecast.iloc[-1] > forecast.iloc[0] else "Downward" if forecast.iloc[-1] < forecast.iloc[0] else "Stable"
+        trend = "Upward" if forecast.iloc[-1].item() > forecast.iloc[0].item() else \
+        "Downward" if forecast.iloc[-1].item() < forecast.iloc[0].item() else "Stable"
+
         print(f"Trend Analysis: The trend is {trend}.")
 
         if conf_int is not None:
