@@ -92,12 +92,44 @@ if __name__ == "__main__":
     forecast_sarima = future_market_forecaster.forecast_sarima()
     forecast_lstm = future_market_forecaster.forecast_lstm()
 
+
+
     # Visualize the forecast
+
+    # Ensure SARIMA forecast index is a datetime index
+    sarima_forecast, sarima_conf_int = future_market_forecaster.forecast_sarima(steps=180)
+
+    # Generate appropriate date index
+    sarima_index = pd.date_range(start=future_market_forecaster.data.index[-1], periods=len(sarima_forecast) + 1, freq='D')[1:]
+
+    # Convert SARIMA forecast into a DataFrame with correct index
+    sarima_forecast = pd.Series(sarima_forecast.values, index=sarima_index)
+
+    # Now call the visualization function
     future_market_forecaster.visualize_forecast(forecast_lstm, "LSTM")
     future_market_forecaster.visualize_forecast(forecast_arima, "ARIMA")
-    future_market_forecaster.visualize_forecast(forecast_sarima[0], "SARIMA")
+    future_market_forecaster.visualize_forecast(sarima_forecast, "SARIMA")
+
+
+
 
     # Analyze forecast
+
+    # Ensure SARIMA forecast index is a datetime index
+    sarima_forecast, sarima_conf_int = future_market_forecaster.forecast_sarima(steps=180)
+
+    # Generate appropriate date index
+    sarima_index = pd.date_range(start=future_market_forecaster.data.index[-1], periods=len(sarima_forecast) + 1, freq='D')[1:]
+
+    # Convert SARIMA forecast into a DataFrame with correct index
+    sarima_forecast = pd.Series(sarima_forecast.values, index=sarima_index)
+    sarima_conf_int.index = sarima_index  # Align confidence intervals
+
+    # Now call the analysis function
+    print("Analysis using ARIMA forecast ...")
     future_market_forecaster.analyze_forecast(forecast_arima)
-    future_market_forecaster.analyze_forecast(forecast_sarima[0], forecast_sarima[1])
+    print("Analysis using SARIMA forecast ...")
+    future_market_forecaster.analyze_forecast(sarima_forecast, sarima_conf_int)
+    print("Analysis using LSTM forecast ...")
     future_market_forecaster.analyze_forecast(forecast_lstm)
+

@@ -47,13 +47,13 @@ class ForecastFutureMarkets:
         """
         Load all saved models.
         """
-        print(f"\n{'='*100}")
+        print(f"\n{'*'*100}")
         print("Loading models...")
         self.arima_model = self.load_model("arima_model.pkl")
         self.sarima_model = self.load_model("sarima_model.pkl")
         self.best_arima_model = self.load_model("optimized_arima_model.pkl")
         self.lstm_model = self.load_model("lstm_model.h5")
-        print(f"\n{'='*100}")
+        print(f"\n{'*'*100}")
 
 
   def forecast_arima(self, steps=180):
@@ -63,7 +63,7 @@ class ForecastFutureMarkets:
         print("Forecasting using ARIMA completed successfully!")
         print("Data forecast by ARIMA")
         print(pd.Series(forecast, name="ARIMA Forecast").head())
-        print(f"\n{'='*100}")
+        print(f"\n{'*'*100}")
 
         return pd.Series(forecast, name="ARIMA Forecast")
 
@@ -79,7 +79,7 @@ class ForecastFutureMarkets:
         print(conf_int)
 
         print("Forecasting using SARIMA completed successfully!")
-        print(f"\n{'='*100}")
+        print(f"\n{'*'*100}")
 
         return forecast.predicted_mean, conf_int
 
@@ -108,7 +108,7 @@ class ForecastFutureMarkets:
         print(lstm_forecast.head())
 
         print("Forecasting using LSTM completed successfully!")
-        print(f"\n{'='*100}")
+        print(f"\n{'*'*100}")
 
         return lstm_forecast
 
@@ -133,9 +133,13 @@ class ForecastFutureMarkets:
 
   def analyze_forecast(self, forecast, conf_int=None):
         """ Analyze the forecast by identifying trends, volatility, and risks. """
+
+        print(f"\n{'*'*100}")
+        print("Analyzing the trends, volatility, and risks of the forecast using various models ... ")
+
         # Check if forecast is a NumPy array and convert to pandas Series if necessary
         if isinstance(forecast, np.ndarray):
-            forecast = pd.Series(forecast.flatten())  # Flatten to 1D and convert to Series
+            forecast = pd.Series(forecast.flatten())
 
         trend = "Upward" if forecast.iloc[-1].item() > forecast.iloc[0].item() else \
         "Downward" if forecast.iloc[-1].item() < forecast.iloc[0].item() else "Stable"
@@ -154,3 +158,6 @@ class ForecastFutureMarkets:
             print("Market Risk: Price decline expected.")
         else:
             print("Market Stable: No major movement expected, but potential volatility.")
+
+
+        print("Analyzing forecast using various forecast models completed successfully!")
