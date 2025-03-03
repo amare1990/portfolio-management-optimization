@@ -104,3 +104,26 @@ class Forecast_Future_Markets:
             bbox_inches='tight'
             )
         plt.show()
+
+
+  def analyze_forecast(self, forecast, conf_int=None):
+        """ Analyze the forecast by identifying trends, volatility, and risks. """
+        # Check if forecast is a NumPy array and convert to pandas Series if necessary
+        if isinstance(forecast, np.ndarray):
+            forecast = pd.Series(forecast.flatten())  # Flatten to 1D and convert to Series
+
+        trend = "Upward" if forecast.iloc[-1] > forecast.iloc[0] else "Downward" if forecast.iloc[-1] < forecast.iloc[0] else "Stable"
+        print(f"Trend Analysis: The trend is {trend}.")
+
+        if conf_int is not None:
+            upper_bound = conf_int.iloc[:, 1]
+            lower_bound = conf_int.iloc[:, 0]
+            volatility = np.mean(upper_bound - lower_bound)
+            print(f"Volatility Analysis: Expected volatility (average confidence interval width): {volatility}")
+
+        if trend == "Upward":
+            print("Market Opportunity: Price increase expected.")
+        elif trend == "Downward":
+            print("Market Risk: Price decline expected.")
+        else:
+            print("Market Stable: No major movement expected, but potential volatility.")
