@@ -60,3 +60,28 @@ class Forecast_Future_Markets:
         print(f"\n{'='*100}")
 
         return forecast.predicted_mean, conf_int
+
+
+  def forecast_lstm(self, steps=180):
+        """ Forecast future stock prices using the trained LSTM model. """
+        if self.lstm_model is None:
+            print("LSTM model is not loaded. Please load the model first.")
+            return None
+
+        inputs = self.data[f'Close {self.ticker}'].values.reshape(-1, 1)  # Ensure input is reshaped correctly
+
+        lstm_forecast = []
+
+        for _ in range(steps):
+            X_input = inputs[-60:].reshape((1, 60, 1))  # Ensure correct shape for LSTM
+            pred_price = self.lstm_model.predict(X_input)[0, 0]
+            lstm_forecast.append(pred_price)
+            inputs = np.append(inputs, pred_price).reshape(-1, 1)  # Append new prediction
+
+        # ✅ No need for inverse_transform since data is already standardized
+        lstm_forecast = np.array(lstm_forecast).reshape(-1, 1)
+
+        print("Forecasting using LSTM completed successfully!")
+        print(f"\n{'='*100}")
+
+        return lstm_forecast
