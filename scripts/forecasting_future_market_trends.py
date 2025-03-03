@@ -3,6 +3,8 @@
 import numpy as np
 import pandas as pd
 
+import matplotlib.pyplot as plt
+
 import pickle
 from tensorflow.keras.models import load_model
 
@@ -85,3 +87,20 @@ class Forecast_Future_Markets:
         print(f"\n{'='*100}")
 
         return lstm_forecast
+
+  def visualize_forecast(self, forecast, model_name="Model"):
+        """ Visualize forecast alongside historical data. """
+        plt.figure(figsize=(14, 7))
+        plt.plot(self.data.index, self.data[f'Close {self.ticker}'], label="Historical Data", color='blue')
+        # Generate date range for forecast
+        forecast_index = pd.date_range(start=self.data.index[-1], periods=len(forecast) + 1, freq='D')[1:]
+        plt.plot(forecast_index, forecast, label=f"Forecast - {model_name}", color='red')
+        plt.xlabel("Date")
+        plt.ylabel("Stock Price")
+        plt.legend()
+        plt.savefig(
+            f"{BASE_DIR}/plots/market_trends/{model_name}_forecast.png",
+            dpi=300,
+            bbox_inches='tight'
+            )
+        plt.show()
