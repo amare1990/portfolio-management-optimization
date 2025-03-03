@@ -54,16 +54,16 @@ if __name__ == "__main__":
     ticker = "TSLA"
     stock_forecasting = StockForecasting(preprocessed_data, ticker)
     stock_forecasting.retrieve_data_by_ticker(ticker, inplace=True)
+    stock_forecasting.normalize_data()
     stock_forecasting.split_data()
 
     # Train models
     stock_forecasting.arima_model()
-    stock_forecasting.sarima_model()
-    stock_forecasting.train_lstm(look_back=60, epochs=10, batch_size=32)
 
     # Optimize ARIMA
     stock_forecasting.optimize_arima()
-
+    stock_forecasting.sarima_model()
+    stock_forecasting.train_lstm(look_back=60, epochs=30, batch_size=32)
 
     # Save all models
     stock_forecasting.save_all_models()

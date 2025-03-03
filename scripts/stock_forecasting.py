@@ -52,7 +52,6 @@ class StockForecasting:
         Normalize the data using MinMaxScaler for machine learning models.
         """
         columns_to_normalize = [f'Close {self.ticker}']
-        # Apply MinMaxScaler only on available columns
         if columns_to_normalize:
             self.scaled[columns_to_normalize] = self.scaler.fit_transform(self.data[columns_to_normalize])
         else:
@@ -67,10 +66,6 @@ class StockForecasting:
 
         self.train_data = self.train_data[[f'Close {self.ticker}']]
         self.test_data = self.test_data[[f'Close {self.ticker}']]
-
-        print("Train data columns:", self.train_data.columns)
-        print("Test data columns:", self.test_data.columns)
-
 
 
 
@@ -96,12 +91,15 @@ class StockForecasting:
         model = SARIMAX(self.data[f'Close {self.ticker}'], order=(5, 1, 0), seasonal_order=(1, 1, 0, 12))
         self.sarima_model = model.fit()
 
-    def forecast_sarima(self):
+    def forecast_sarima(self, steps=None):
         """
         Forecast future stock prices using the SARIMA model.
         """
-        forecast = self.sarima_model.forecast(steps=len(self.test_data))
-        return pd.Series(forecast, index=self.test_data.index, name=f'Close {self.ticker}')
+        if steps is None:
+            steps = len(self.test_data)
+        forecast = self.sarima_model.forecast(steps=steps)
+        forecast = pd.Series(forecast, index=self.test_data.index, name=f'Close {self.ticker}').fillna(0)
+        return forecast
 
 
 
@@ -124,7 +122,7 @@ class StockForecasting:
             y.append(self.scaled.iloc[i + look_back, 0])
         return np.array(X), np.array(y)
 
-    def train_lstm(self, look_back=60, epochs=5, batch_size=32):
+    def train_lstm(self, look_back=60, epochs=20, batch_size=32):
         """
         Train the LSTM model.
         """
@@ -173,8 +171,34 @@ class StockForecasting:
         """
         Optimize ARIMA model parameters using auto_arima from pmdarima.
         """
+        print(f"{'*'*100}")
+        print("Optimizing ARIMA ...")
         model = auto_arima(self.data[f'Close {self.ticker}'], seasonal=True, m=5, trace=True, suppress_warnings=True)
         self.best_arima_model = model.fit(self.data[f'Close {self.ticker}'])
+
+
+    def forecast_optimized_arima(self, steps=None):
+        """
+        Forecast future stock prices using the optimized ARIMA model.
+        """
+        print(f"{'*'*100}")
+        print(" Forecasting using Optimizing ARIMA...")
+
+        # If steps is provided, use it, otherwise use the length of test_data
+        forecast_steps = steps if steps is not None else len(self.test_data)
+
+        # Use the optimized ARIMA model (self.best_arima_model) for forecasting
+        forecast = self.best_arima_model.predict(n_periods=forecast_steps)
+
+        # Create a pandas Series with the correct index
+        forecast_series = pd.Series(forecast, index=self.test_data.index, name=f'Close {self.ticker}')
+
+        # Fill NaN values with 0 if any exist
+        forecast_series = forecast_series.fillna(0)
+
+        return forecast_series
+
+
 
     def save_model(self, model, filename):
         """
@@ -202,17 +226,46 @@ class StockForecasting:
 
     def compare_models(self):
         """
-        Compare the forecasts from all models.
+        Compare the forecasts from all models, including LSTM, ARIMA, optimized ARIMA, and SARIMAX.
         """
+
+        # Evaluating ARIMA Model (Fixed Order)
+        print("\nEvaluating ARIMA Model:")
+        arima_forecast = self.forecast_arima()
+        arima_mae, arima_rmse, arima_mape = self.evaluate_model(self.test_data[f'Close {self.ticker}'], arima_forecast)
+        print(f"ARIMA Model - MAE: {arima_mae}, RMSE: {arima_rmse}, MAPE: {arima_mape}")
+
+        # Evaluating Optimized ARIMA Model (auto_arima)
+        print("\nEvaluating Optimized ARIMA Model:")
+        optimized_arima_forecast = self.forecast_optimized_arima(steps=len(self.test_data))
+        optimized_arima_mae, optimized_arima_rmse, optimized_arima_mape = self.evaluate_model(self.test_data[f'Close {self.ticker}'], optimized_arima_forecast)
+        print(f"Optimized ARIMA Model - MAE: {optimized_arima_mae}, RMSE: {optimized_arima_rmse}, MAPE: {optimized_arima_mape}")
+
+        # Evaluating SARIMAX Model
+        print("\nEvaluating SARIMAX Model:")
+        sarimax_forecast = self.forecast_sarima(steps=len(self.test_data))
+        sarimax_mae, sarimax_rmse, sarimax_mape = self.evaluate_model(self.test_data[f'Close {self.ticker}'], sarimax_forecast)
+        print(f"SARIMAX Model - MAE: {sarimax_mae}, RMSE: {sarimax_rmse}, MAPE: {sarimax_mape}")
+
+
+        # Evaluating LSTM Model
         print("Evaluating LSTM Model:")
         predicted_lstm, actual_lstm = self.forecast_lstm()
         lstm_mae, lstm_rmse, lstm_mape = self.evaluate_model(actual_lstm, predicted_lstm)
         print(f"LSTM Model - MAE: {lstm_mae}, RMSE: {lstm_rmse}, MAPE: {lstm_mape}")
 
-        print("Evaluating ARIMA Model:")
-        arima_forecast = self.forecast_arima()
-        arima_mae, arima_rmse, arima_mape = self.evaluate_model(self.test_data[f'Close {self.ticker}'], arima_forecast)
-        print(f"ARIMA Model - MAE: {arima_mae}, RMSE: {arima_rmse}, MAPE: {arima_mape}")
+        # Compare performance
+        model_performance = {
+            "LSTM": (lstm_mae, lstm_rmse, lstm_mape),
+            "ARIMA (Fixed)": (arima_mae, arima_rmse, arima_mape),
+            "Optimized ARIMA": (optimized_arima_mae, optimized_arima_rmse, optimized_arima_mape),
+            "SARIMAX": (sarimax_mae, sarimax_rmse, sarimax_mape),
+        }
+
+        best_model = min(model_performance, key=lambda x: model_performance[x][1])  # Select model with lowest RMSE
+        print(f"\nBest performing model based on RMSE: {best_model}")
+
+
 
 
 
