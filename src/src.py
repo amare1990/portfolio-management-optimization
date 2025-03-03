@@ -39,9 +39,6 @@ if __name__ == "__main__":
     portfolio_analysis.clean_data()
     print("Handled data missing and Ensured data types of each data")
     print(f"\n{'*'*100}\n")
-    portfolio_analysis.normalize_data()
-    print("Normalized Data")
-    print(f"\n{'*'*100}\n")
     save_path = f"{BASE_DIR}/data/preprocessed_data.csv"
     portfolio_analysis.save_preprocessed_data(save_path)
     print(f"\n{'*'*100}\n")

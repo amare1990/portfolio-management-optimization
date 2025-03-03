@@ -7,6 +7,7 @@ from statsmodels.tsa.arima.model import ARIMA
 from statsmodels.tsa.statespace.sarimax import SARIMAX
 from pmdarima import auto_arima
 
+from sklearn.preprocessing import MinMaxScaler
 from sklearn.metrics import mean_absolute_error, mean_absolute_percentage_error, mean_squared_error
 
 import tensorflow as tf
@@ -22,7 +23,9 @@ BASE_DIR = "/home/am/Documents/Software Development/10_Academy Training/week-11/
 class StockForecasting:
     def __init__(self, processed_data, ticker):
         self.data = processed_data
+        self.scaled = pd.DataFrame(index=self.data.index)
         self.ticker = ticker
+        self.scaler = MinMaxScaler()
 
 
 
@@ -44,6 +47,16 @@ class StockForecasting:
 
 
 
+    def normalize_data(self):
+        """
+        Normalize the data using MinMaxScaler for machine learning models.
+        """
+        columns_to_normalize = [f'Close {self.ticker}']
+        # Apply MinMaxScaler only on available columns
+        if columns_to_normalize:
+            self.scaled[columns_to_normalize] = self.scaler.fit_transform(self.data[columns_to_normalize])
+        else:
+            print("⚠️ No matching columns found for normalization.")
 
 
     def split_data(self):
@@ -73,7 +86,6 @@ class StockForecasting:
         Forecast future stock prices using the ARIMA model.
         """
         forecast = self.arima_model.predict(start=len(self.train_data), end=len(self.data)-1)
-        # **Fix: Return forecast as a pandas Series with the correct column name**
         return pd.Series(forecast, index=self.test_data.index, name=f'Close {self.ticker}')
 
 
@@ -81,8 +93,7 @@ class StockForecasting:
         """
         Fit a SARIMA model on the stock data.
         """
-        # Modify the seasonal_order and order to avoid conflict in AR lags
-        model = SARIMAX(self.data[f'Close {self.ticker}'], order=(5, 1, 0), seasonal_order=(1, 1, 0, 12))  # Example: Changed the seasonal period to 12
+        model = SARIMAX(self.data[f'Close {self.ticker}'], order=(5, 1, 0), seasonal_order=(1, 1, 0, 12))
         self.sarima_model = model.fit()
 
     def forecast_sarima(self):
@@ -90,7 +101,6 @@ class StockForecasting:
         Forecast future stock prices using the SARIMA model.
         """
         forecast = self.sarima_model.forecast(steps=len(self.test_data))
-        # **Fix: Return forecast as a pandas Series with the correct column name**
         return pd.Series(forecast, index=self.test_data.index, name=f'Close {self.ticker}')
 
 
@@ -110,8 +120,8 @@ class StockForecasting:
     def create_lstm_data(self, look_back):
         X, y = [], []
         for i in range(len(self.data) - look_back - 1):
-            X.append(self.data.iloc[i:(i + look_back), 0].values)
-            y.append(self.data.iloc[i + look_back, 0])
+            X.append(self.scaled.iloc[i:(i + look_back), 0].values)
+            y.append(self.scaled.iloc[i + look_back, 0])
         return np.array(X), np.array(y)
 
     def train_lstm(self, look_back=60, epochs=5, batch_size=32):
@@ -137,10 +147,14 @@ class StockForecasting:
         Forecast future stock prices using the trained LSTM model.
         """
         predicted_stock_price = self.lstm_model.predict(self.X_test)
-        # Remove inverse_transform as data is already scaled in preprocessing
-        # predicted_stock_price = self.scaler.inverse_transform(predicted_stock_price)
-        # actual_stock_price = self.scaler.inverse_transform(self.y_test.reshape(-1, 1))
-        actual_stock_price = self.y_test.reshape(-1, 1)  # Reshape y_test for consistency
+
+        # Change the scaled predicted data into the unscaled predicted data
+        predicted_stock_price = self.scaler.inverse_transform(predicted_stock_price)
+
+        actual_stock_price = self.y_test.reshape(-1, 1)
+
+         # Change the scaled actual data into the original actual data
+        actual_stock_price = self.scaler.inverse_transform(self.y_test.reshape(-1, 1))
 
         return predicted_stock_price, actual_stock_price
 
