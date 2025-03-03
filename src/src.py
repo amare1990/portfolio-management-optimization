@@ -18,6 +18,7 @@ print(f'Root direc: {ROOT_DIR}')
 
 from scripts.data_analysis import PortfolioAnalysis
 from scripts.stock_forecasting import StockForecasting
+from scripts.forecasting_future_market_trends import ForecastFutureMarkets
 
 
 BASE_DIR = "/home/am/Documents/Software Development/10_Academy Training/week-11/portfolio-management-optimization"
@@ -51,7 +52,7 @@ if __name__ == "__main__":
 
     portfolio_analysis.summarize_insights()
 
-    # Pipeline to run stock forcasting processes
+    # Pipeline to run stock forecasting processes
     preprocessed_data = pd.read_csv(f"{BASE_DIR}/data/preprocessed_data.csv", index_col=0)
     ticker = "TSLA"
     stock_forecasting = StockForecasting(preprocessed_data, ticker)
@@ -72,3 +73,31 @@ if __name__ == "__main__":
 
     # Compare models
     stock_forecasting.compare_models()
+
+
+
+    # Pipeline to run stock future Markets forecasting processes
+
+    # Assign ticker to TSLA
+    ticker = "TSLA"
+
+    """Instantiate class"""
+    future_market_forecaster = ForecastFutureMarkets(ticker, f"{BASE_DIR}/data/preprocessed_data.csv")
+
+    # Load all models
+    future_market_forecaster.load_all_models()
+
+    # Generate forecasts
+    forecast_arima = future_market_forecaster.forecast_arima()
+    forecast_sarima = future_market_forecaster.forecast_sarima()
+    forecast_lstm = future_market_forecaster.forecast_lstm()
+
+    # Visualize the forecast
+    future_market_forecaster.visualize_forecast(forecast_lstm, "LSTM")
+    future_market_forecaster.visualize_forecast(forecast_arima, "ARIMA")
+    future_market_forecaster.visualize_forecast(forecast_sarima[0], "SARIMA")
+
+    # Analyze forecast
+    future_market_forecaster.analyze_forecast(forecast_arima)
+    future_market_forecaster.analyze_forecast(forecast_sarima[0], forecast_sarima[1])
+    future_market_forecaster.analyze_forecast(forecast_lstm)
