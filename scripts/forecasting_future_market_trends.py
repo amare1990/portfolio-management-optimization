@@ -50,3 +50,13 @@ class Forecast_Future_Markets:
         print(f"\n{'='*100}")
 
         return pd.Series(forecast, name="ARIMA Forecast")
+
+  def forecast_sarima(self, steps=180):
+        """ Forecast future stock prices using the SARIMA model. """
+        forecast = self.sarima_model.get_forecast(steps=steps)
+        conf_int = forecast.conf_int()
+
+        print("Forecasting using SARIMA completed successfully!")
+        print(f"\n{'='*100}")
+
+        return forecast.predicted_mean, conf_int
