@@ -12,9 +12,17 @@ from tensorflow.keras.models import load_model
 BASE_DIR = "/home/am/Documents/Software Development/10_Academy Training/week-11/portfolio-management-optimization"
 
 
-class Forecast_Future_Markets:
-  def __init__(self, processed_file_path):
+class ForecastFutureMarkets:
+  def __init__(self, ticker, processed_file_path):
     self.data = pd.read_csv(processed_file_path)
+    # Convert index to DatetimeIndex
+    self.data.index = pd.to_datetime(self.data.index)
+    self.ticker = ticker
+    self.arima_model = None
+    self.sarima_model = None
+    self.best_arima_model = None
+    self.lstm_model = None
+    print("Class instantiated!")
 
 
   def load_model(self, filename):
@@ -22,12 +30,13 @@ class Forecast_Future_Markets:
         Load a model using pickle (for ARIMA and SARIMA) or TensorFlow (for LSTM).
         """
         try:
+            full_path = f"{BASE_DIR}/models/{filename}"
             if filename.endswith('.h5'):
-                model = load_model(filename)  # Load LSTM model using TensorFlow
+                model = load_model(full_path)  # Load LSTM model using TensorFlow
             else:
-                with open(filename, 'rb') as file:
+                with open(full_path, 'rb') as file:
                     model = pickle.load(file)
-            print(f"Model loaded successfully from {BASE_DIR}/models/{filename}")
+            print(f"Model loaded successfully from {full_path}")
             return model
         except Exception as e:
             print(f"Error loading model: {e}")
@@ -38,10 +47,10 @@ class Forecast_Future_Markets:
         """
         Load all saved models.
         """
-        self.arima_model = self.load_model(f"{BASE_DIR}/models/arima_model.pkl")
-        self.sarima_model = self.load_model(f"{BASE_DIR}/models/sarima_model.pkl")
-        self.best_arima_model = self.load_model(f"{BASE_DIR}/models/optimized_arima_model.pkl")
-        self.lstm_model = self.load_model(f"{BASE_DIR}/models/lstm_model.h5")
+        self.arima_model = self.load_model("arima_model.pkl")
+        self.sarima_model = self.load_model("sarima_model.pkl")
+        self.best_arima_model = self.load_model("optimized_arima_model.pkl")
+        self.lstm_model = self.load_model("lstm_model.h5")
 
 
   def forecast_arima(self, steps=180):
