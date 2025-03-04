@@ -86,9 +86,17 @@ class PortfolioOptimization:
         Calculate the expected portfolio return and volatility.
         """
         # Expected portfolio return
-        portfolio_return = np.sum(self.calculate_annual_return() * weights)
+        portfolio_expected_return = np.sum(self.calculate_annual_return() * weights)
 
         # Expected portfolio volatility (standard deviation)
         portfolio_volatility = np.sqrt(np.dot(weights.T, np.dot(self.calculate_covariance_matrix(), weights)))
 
-        return portfolio_return, portfolio_volatility
+        return portfolio_expected_return, portfolio_volatility
+
+
+    def negative_sharpe_ratio(self, weights, risk_free_rate=0.0):
+        """
+        Objective function to minimize the negative Sharpe Ratio.
+        """
+        portfolio_expected_return, portfolio_volatility = self.portfolio_performance(weights)
+        return -(portfolio_expected_return - risk_free_rate) / portfolio_volatility
