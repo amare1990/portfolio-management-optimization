@@ -3,6 +3,9 @@ is used to generate forecast data within 6-12 months."""
 
 import numpy as np
 import pandas as pd
+
+from scipy.optimize import minimize
+
 from scripts.forecasting_future_market_trends import ForecastFutureMarkets
 from scripts.stock_forecasting import StockForecasting
 
@@ -100,3 +103,20 @@ class PortfolioOptimization:
         """
         portfolio_expected_return, portfolio_volatility = self.portfolio_performance(weights)
         return -(portfolio_expected_return - risk_free_rate) / portfolio_volatility
+
+
+    def optimize_portfolio(self):
+        """
+        Optimize portfolio by maximizing the Sharpe Ratio.
+        """
+        # Initial guess for portfolio weights (equal allocation)
+        num_assets = len(self.tickers)
+        initial_weights = np.ones(num_assets) / num_assets
+
+        # Constraints: weights should sum to 1, and each weight should be between 0 and 1
+        constraints = ({'type': 'eq', 'fun': lambda weights: np.sum(weights) - 1})
+        bounds = tuple((0, 1) for asset in range(num_assets))
+
+        # Optimize the portfolio
+        result = minimize(self.negative_sharpe_ratio, initial_weights, method='SLSQP', bounds=bounds, constraints=constraints)
+        return result.x
