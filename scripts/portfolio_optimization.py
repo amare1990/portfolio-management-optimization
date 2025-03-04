@@ -12,6 +12,7 @@ class PortfolioOptimization:
         self.tickers = tickers
         self.forecasts = {}  # Dictionary to store forecasts for each ticker
         self.start_date = start_date  # Set the forecast start date
+        self.data = None
 
     def generate_forecasts(self):
         for ticker in self.tickers:
@@ -53,4 +54,14 @@ class PortfolioOptimization:
         forecast_horizon = merged_df.shape[0]  # Number of forecasted days
         merged_df.index = pd.date_range(start=self.start_date, periods=forecast_horizon, freq="B")  # 'B' for business days
         merged_df.index.name = 'Date'
+        self.data = merged_df
+
         return merged_df
+
+
+    def _calculate_returns(self):
+        """
+        Calculate daily returns for the assets.
+        """
+        returns = self.data.pct_change().dropna()
+        return returns
