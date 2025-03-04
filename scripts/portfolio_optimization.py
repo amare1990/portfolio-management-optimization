@@ -70,5 +70,11 @@ class PortfolioOptimization:
         """
         Compute the annual return for each asset.
         """
-        daily_returns = self.returns.mean() * 252  # Assuming 252 trading days in a year
+        daily_returns = self.returns.mean() * 252  # Assuming 252 trading/working days in a year
         return daily_returns
+
+    def calculate_covariance_matrix(self):
+        """
+        Compute the covariance matrix of returns.
+        """
+        return self.returns.cov() * 252  # Annualize the covariance matrix
