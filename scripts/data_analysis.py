@@ -84,26 +84,6 @@ class PortfolioAnalysis():
         self.data[columns_to_convert] = self.data[columns_to_convert].astype(
             float)
 
-    def normalize_data(self):
-        """
-        Normalize the data using MinMaxScaler for machine learning models.
-        """
-        scaler = MinMaxScaler()
-
-        # Identify ticker-specific column names dynamically
-        _ = self.tickers if isinstance(
-            self.tickers, list) else [self.tickers]
-        columns_to_normalize = [
-            col for col in self.data.columns if any(
-                field in col for field in [
-                    "Open", "High", "Low", "Close"])]
-
-        # Apply MinMaxScaler only on available columns
-        if columns_to_normalize:
-            self.data[columns_to_normalize] = scaler.fit_transform(
-                self.data[columns_to_normalize])
-        else:
-            print("⚠️ No matching columns found for normalization.")
 
     def save_preprocessed_data(self, save_path):
         """Saving preprocessed data."""

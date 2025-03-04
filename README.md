@@ -25,6 +25,8 @@ portfolio-management-optimization/
 │
 │── notebooks/                     # Jupyter notebooks for analysis
 │   ├── data_analyzer.ipynb         # Notebook for data analysis
+    ├── stock_forecaster.ipynb         # Notebook for building models and stock price forecasting
+    ├── market_trends_forecaster.ipynb         # Notebook for future market trends forecasting
 │   ├── plots/eda                      # Directory for storing generated plots while performing EDA
 │       ├── closing_prie.png    # Time series plot
 │       ├── daily_pct_change.png
@@ -32,7 +34,8 @@ portfolio-management-optimization/
 │── scripts/                        # Python scripts for different modules
     ├── __init__.py
 │   ├── data_analysis.py            # Data downloading, cleaning, analysis, normalization, and EDA
-│   ├── stock_forcatsing.py            # Forcasting closing prices of TSLA for the next 30 days using ARIMA, SARIMA, LSTM
+│   ├── stock_forecatsing.py            # Forecasting closing prices of TSLA for the next 30 days using ARIMA, SARIMA, Optimized_ARIMA and LSTM
+│   ├── forecasting_future_market_trends.py            # Forecasting closing prices of TSLA for the next 6-12 months using ARIMA, SARIMA, LSTM
 
 │
 │── src/                            # Main automation script
@@ -234,11 +237,14 @@ python src/src.py
 
 ### 2. Stock Forecasting
 
-This section covers the implementation of time-series forecasting using various statistical and machine learning models. The primary goal is to predict stock prices based on historical data using methods like ARIMA, SARIMA, and LSTM.
+This section covers the implementation of time-series forecasting using various statistical and machine learning models.
+The primary goal is to predict stock prices based on historical data using methods like ARIMA, SARIMA, and LSTM.
 
 #### Overview of StockForecasting Class
 
-The `StockForecasting` class enables forecasting of stock prices using different approaches. It integrates data preprocessing, model training, and evaluation functionalities. The class supports the following models:
+The `StockForecasting` class enables forecasting of stock prices using different approaches.
+It integrates data preprocessing, model training, and evaluation functionalities.
+The class supports the following models:
 
 1. **ARIMA (AutoRegressive Integrated Moving Average)**: A traditional statistical method for time-series forecasting.
 2. **SARIMA (Seasonal ARIMA)**: An extension of ARIMA that accounts for seasonal patterns in the data.
@@ -281,9 +287,9 @@ The `StockForecasting` class enables forecasting of stock prices using different
 
 #### Usage
 
-- To run and view each process of the stcok foracsting, open stock-forcaster.ipnb and run it
+- To run and view each process of the stcok foracsting, open stock_forcaster.ipnb and run it
 ```python
-To see end -to-end result
+To see the stock_forecast result from the end -to-end result
 python src/src.py
 
 ```
@@ -298,12 +304,63 @@ Model evaluation is performed using three key metrics:
 ---
 
 
+### 3. Forecast Future Market Trends
+
+This module leverages various machine learning models to forecast future market trends based on historical stock data. It loads pre-trained models (ARIMA, SARIMA and LSTM) to predict future stock prices. The models are designed to forecast price movements for the next 180 days. The corresponding notebook to run this feature is `market_trends_forecaster.ipynb`.
+
+#### Forecast Models:
+1. **ARIMA (AutoRegressive Integrated Moving Average)**: A time series forecasting method that uses past values to predict future values. This model is suitable for univariate data where patterns can be detected and extrapolated.
+2. **SARIMA (Seasonal ARIMA)**: An extension of ARIMA that accounts for seasonality in the data, making it ideal for financial time series data with seasonal trends.
+3. **LSTM (Long Short-Term Memory)**: A deep learning model specifically designed to handle sequences of data and learn long-term dependencies. LSTM models are effective for forecasting stock prices due to their ability to learn from temporal data.
+
+#### Key Features:
+- **Model Loading**: All models are loaded via a dedicated function `load_model()`, which supports both ARIMA/SARIMA (using pickle) and LSTM (using TensorFlow).
+- **Forecasting**: The `forecast_arima()`, `forecast_sarima()`, and `forecast_lstm()` methods perform predictions based on the selected model. The forecasts are generated for the next 180 steps (days), providing an outlook on future stock prices.
+- **Visualization**: The `visualize_forecast()` method generates visualizations comparing historical stock prices with the forecasted data from the selected model.
+- **Trend & Volatility Analysis**: The `analyze_forecast()` method evaluates the forecast for potential trends (upward, downward, or stable) and volatility by analyzing the forecasted confidence intervals.
+
+#### How to Use:
+1. **Class Initialization**: Instantiate the `ForecastFutureMarkets` class by passing the stock ticker and the path to the processed stock data file.
+    ```python
+    forecaster = ForecastFutureMarkets(ticker="AAPL", processed_file_path="processed_data.csv")
+    ```
+2. **Model Loading**: Load all necessary models using the `load_all_models()` method.
+    ```python
+    forecaster.load_all_models()
+    ```
+3. **Forecasting**:
+    - ARIMA Forecast:
+        ```python
+        forecast_arima = forecaster.forecast_arima(steps=180)
+        ```
+    - SARIMA Forecast:
+        ```python
+        forecast_sarima, conf_int = forecaster.forecast_sarima(steps=180)
+        ```
+    - LSTM Forecast:
+        ```python
+        forecast_lstm = forecaster.forecast_lstm(steps=180)
+        ```
+4. **Visualization**: Use the `visualize_forecast()` method to visualize the forecast.
+    ```python
+    forecaster.visualize_forecast(forecast_arima, model_name="ARIMA")
+    ```
+5. **Trend and Volatility Analysis**: Analyze the forecast using `analyze_forecast()`.
+    ```python
+    forecaster.analyze_forecast(forecast_arima)
+    ```
+
+For complete end-to-end execution, the forecasting process is integrated into the `src/src.py` script, which automates loading models, generating forecasts, and running the analysis pipeline.
+
+---
+
+
 ## Future Enhancements
-- Forecast Future Market Trends using forecasted data and built models
+
 - Optimize Portfolio Based on Forecast data
 
 
-
+----
 
 
 
