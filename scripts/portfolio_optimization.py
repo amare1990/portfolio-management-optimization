@@ -120,3 +120,17 @@ class PortfolioOptimization:
         # Optimize the portfolio
         result = minimize(self.negative_sharpe_ratio, initial_weights, method='SLSQP', bounds=bounds, constraints=constraints)
         return result.x
+
+
+    def calculate_var(self, portfolio_weights, confidence_level=0.95):
+        """
+        Calculate Value at Risk (VaR) for the portfolio.
+        """
+        portfolio_return, portfolio_volatility = self.portfolio_performance(portfolio_weights)
+
+        # Calculate the z-score for the given confidence level
+        z_score = np.percentile(np.random.normal(0, 1, 100000), (1 - confidence_level) * 100)
+
+        # Calculate VaR at the given confidence level
+        var = portfolio_return - z_score * portfolio_volatility
+        return var
