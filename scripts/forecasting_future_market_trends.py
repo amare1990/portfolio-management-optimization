@@ -13,26 +13,26 @@ BASE_DIR = "/home/am/Documents/Software Development/10_Academy Training/week-11/
 
 
 class ForecastFutureMarkets:
-  def __init__(self, ticker, processed_file_path):
-    self.data = pd.read_csv(processed_file_path, index_col=0)
-    # Convert index to DatetimeIndex
-    self.data.index = pd.to_datetime(self.data.index)
-    self.ticker = ticker
-    self.arima_model = None
-    self.sarima_model = None
-    self.best_arima_model = None
-    self.lstm_model = None
-    print("Class instantiated!")
+    def __init__(self, ticker, processed_file_path):
+        self.data = pd.read_csv(processed_file_path, index_col=0)
+        # Convert index to DatetimeIndex
+        self.data.index = pd.to_datetime(self.data.index)
+        self.ticker = ticker
+        self.arima_model = None
+        self.sarima_model = None
+        self.best_arima_model = None
+        self.lstm_model = None
+        print("Class instantiated!")
 
-
-  def load_model(self, filename):
+    def load_model(self, filename):
         """
         Load a model using pickle (for ARIMA and SARIMA) or TensorFlow (for LSTM).
         """
         try:
             full_path = f"{BASE_DIR}/models/{filename}"
             if filename.endswith('.h5'):
-                model = load_model(full_path)  # Load LSTM model using TensorFlow
+                # Load LSTM model using TensorFlow
+                model = load_model(full_path)
             else:
                 with open(full_path, 'rb') as file:
                     model = pickle.load(file)
@@ -42,8 +42,7 @@ class ForecastFutureMarkets:
             print(f"Error loading model: {e}")
             return None
 
-
-  def load_all_models(self):
+    def load_all_models(self):
         """
         Load all saved models.
         """
@@ -55,8 +54,7 @@ class ForecastFutureMarkets:
         self.lstm_model = self.load_model("lstm_model.h5")
         print(f"\n{'*'*100}")
 
-
-  def forecast_arima(self, steps=180):
+    def forecast_arima(self, steps=180):
         """ Forecast future stock prices using the ARIMA model. """
         forecast = self.arima_model.forecast(steps=steps)
 
@@ -67,7 +65,7 @@ class ForecastFutureMarkets:
 
         return pd.Series(forecast, name="ARIMA Forecast")
 
-  def forecast_sarima(self, steps=180):
+    def forecast_sarima(self, steps=180):
         """ Forecast future stock prices using the SARIMA model. """
         forecast = self.sarima_model.get_forecast(steps=steps)
         conf_int = forecast.conf_int()
@@ -83,8 +81,7 @@ class ForecastFutureMarkets:
 
         return forecast.predicted_mean, conf_int
 
-
-  def forecast_lstm(self, steps=180):
+    def forecast_lstm(self, steps=180):
         """ Forecast future stock prices using the trained LSTM model. """
         if self.lstm_model is None:
             print("LSTM model is not loaded. Please load the model first.")
@@ -112,13 +109,22 @@ class ForecastFutureMarkets:
 
         return lstm_forecast
 
-  def visualize_forecast(self, forecast, model_name="ARIMA"):
+    def visualize_forecast(self, forecast, model_name="ARIMA"):
         """ Visualize forecast alongside historical data. """
         plt.figure(figsize=(14, 7))
-        plt.plot(self.data.index, self.data[f'Close {self.ticker}'], label="Historical Data", color='blue')
+        plt.plot(
+            self.data.index,
+            self.data[f'Close {self.ticker}'],
+            label="Historical Data",
+            color='blue')
         # Generate date range for forecast
-        forecast_index = pd.date_range(start=self.data.index[-1], periods=len(forecast) + 1, freq='D')[1:]
-        plt.plot(forecast_index, forecast, label=f"Forecast - {model_name}", color='red')
+        forecast_index = pd.date_range(
+            start=self.data.index[-1], periods=len(forecast) + 1, freq='D')[1:]
+        plt.plot(
+            forecast_index,
+            forecast,
+            label=f"Forecast - {model_name}",
+            color='red')
         plt.xlabel("Date")
         plt.ylabel("Stock Price")
         plt.title(f"Forecast and historical_data using {model_name}")
@@ -127,22 +133,23 @@ class ForecastFutureMarkets:
             f"{BASE_DIR}/notebooks/plots/market_trends/{model_name}_forecast.png",
             dpi=300,
             bbox_inches='tight'
-            )
+        )
         plt.show()
 
-
-  def analyze_forecast(self, forecast, conf_int=None):
+    def analyze_forecast(self, forecast, conf_int=None):
         """ Analyze the forecast by identifying trends, volatility, and risks. """
 
         print(f"\n{'*'*100}")
         print("Analyzing the trends, volatility, and risks of the forecast using various models ... ")
 
-        # Check if forecast is a NumPy array and convert to pandas Series if necessary
+        # Check if forecast is a NumPy array and convert to pandas Series if
+        # necessary
         if isinstance(forecast, np.ndarray):
             forecast = pd.Series(forecast.flatten())
 
         trend = "Upward" if forecast.iloc[-1].item() > forecast.iloc[0].item() else \
-        "Downward" if forecast.iloc[-1].item() < forecast.iloc[0].item() else "Stable"
+            "Downward" if forecast.iloc[-1].item(
+        ) < forecast.iloc[0].item() else "Stable"
 
         print(f"Trend Analysis: The trend is {trend}.")
 
@@ -150,7 +157,8 @@ class ForecastFutureMarkets:
             upper_bound = conf_int.iloc[:, 1]
             lower_bound = conf_int.iloc[:, 0]
             volatility = np.mean(upper_bound - lower_bound)
-            print(f"Volatility Analysis: Expected volatility (average confidence interval width): {volatility}")
+            print(
+                f"Volatility Analysis: Expected volatility (average confidence interval width): {volatility}")
 
         if trend == "Upward":
             print("Market Opportunity: Price increase expected.")
@@ -158,6 +166,5 @@ class ForecastFutureMarkets:
             print("Market Risk: Price decline expected.")
         else:
             print("Market Stable: No major movement expected, but potential volatility.")
-
 
         print("Analyzing forecast using various forecast models completed successfully!")
