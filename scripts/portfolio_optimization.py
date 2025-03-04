@@ -1,6 +1,7 @@
 """Portfolio optimization for all the three assests where ARIMA statistical mdoel
 is used to generate forecast data within 6-12 months."""
 
+import numpy as np
 import pandas as pd
 from scripts.forecasting_future_market_trends import ForecastFutureMarkets
 from scripts.stock_forecasting import StockForecasting
@@ -78,3 +79,16 @@ class PortfolioOptimization:
         Compute the covariance matrix of returns.
         """
         return self.returns.cov() * 252  # Annualize the covariance matrix
+
+
+    def portfolio_performance(self, weights):
+        """
+        Calculate the expected portfolio return and volatility.
+        """
+        # Expected portfolio return
+        portfolio_return = np.sum(self.calculate_annual_return() * weights)
+
+        # Expected portfolio volatility (standard deviation)
+        portfolio_volatility = np.sqrt(np.dot(weights.T, np.dot(self.calculate_covariance_matrix(), weights)))
+
+        return portfolio_return, portfolio_volatility
