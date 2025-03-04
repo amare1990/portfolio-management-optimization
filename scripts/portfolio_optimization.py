@@ -4,6 +4,7 @@ is used to generate forecast data within 6-12 months."""
 import numpy as np
 import pandas as pd
 
+import matplotlib.pyplot as plt
 from scipy.optimize import minimize
 
 from scripts.forecasting_future_market_trends import ForecastFutureMarkets
@@ -134,3 +135,29 @@ class PortfolioOptimization:
         # Calculate VaR at the given confidence level
         var = portfolio_return - z_score * portfolio_volatility
         return var
+
+
+    def visualize_portfolio(self, optimal_weights):
+        """
+        Visualize the portfolio performance.
+        """
+        portfolio_return, portfolio_volatility = self.portfolio_performance(optimal_weights)
+        print(f"Optimized Portfolio  Expected Return: {portfolio_return * 100:.2f}%")
+        print(f"Optimized Portfolio Volatility: {portfolio_volatility * 100:.2f}%")
+
+        # Simulate portfolio growth over time
+        portfolio_growth = (self.returns.dot(optimal_weights) + 1).cumprod()
+
+        # Plot cumulative return
+        plt.figure(figsize=(14,7))
+        plt.plot(portfolio_growth, label="Optimized Portfolio Growth", color='green')
+        plt.title("Portfolio Performance (Cumulative Return)")
+        plt.xlabel("Date")
+        plt.ylabel("Cumulative Return")
+        plt.legend()
+        plt.savefig(
+            f'{BASE_DIR}/notebooks/plots/optimization/portfolio_performance.png',
+            dpi=300,
+            bbox_inches='tight'
+        )
+        plt.show()
