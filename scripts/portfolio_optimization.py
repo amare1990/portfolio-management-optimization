@@ -65,3 +65,10 @@ class PortfolioOptimization:
         """
         returns = self.data.pct_change().dropna()
         return returns
+
+    def calculate_annual_return(self):
+        """
+        Compute the annual return for each asset.
+        """
+        daily_returns = self.returns.mean() * 252  # Assuming 252 trading days in a year
+        return daily_returns
