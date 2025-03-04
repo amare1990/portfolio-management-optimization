@@ -84,7 +84,6 @@ class PortfolioAnalysis():
         self.data[columns_to_convert] = self.data[columns_to_convert].astype(
             float)
 
-
     def save_preprocessed_data(self, save_path):
         """Saving preprocessed data."""
         self.data.to_csv(save_path)

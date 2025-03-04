@@ -16,9 +16,10 @@ ROOT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 sys.path.append(ROOT_DIR)
 print(f'Root direc: {ROOT_DIR}')
 
-from scripts.data_analysis import PortfolioAnalysis
-from scripts.stock_forecasting import StockForecasting
+from scripts.portfolio_optimization import PortfolioOptimization
 from scripts.forecasting_future_market_trends import ForecastFutureMarkets
+from scripts.stock_forecasting import StockForecasting
+from scripts.data_analysis import PortfolioAnalysis
 
 
 BASE_DIR = "/home/am/Documents/Software Development/10_Academy Training/week-11/portfolio-management-optimization"
@@ -50,7 +51,8 @@ if __name__ == "__main__":
     portfolio_analysis.summarize_insights()
 
     # Pipeline to run stock forecasting processes
-    preprocessed_data = pd.read_csv(f"{BASE_DIR}/data/preprocessed_data.csv", index_col=0)
+    preprocessed_data = pd.read_csv(
+        f"{BASE_DIR}/data/preprocessed_data.csv", index_col=0)
     ticker = "TSLA"
     stock_forecasting = StockForecasting(preprocessed_data, ticker)
     stock_forecasting.retrieve_data_by_ticker(ticker, inplace=True)
@@ -71,15 +73,14 @@ if __name__ == "__main__":
     # Compare models
     stock_forecasting.compare_models()
 
-
-
     # Pipeline to run stock future Markets forecasting processes
 
     # Assign ticker to TSLA
     ticker = "TSLA"
 
     """Instantiate class"""
-    future_market_forecaster = ForecastFutureMarkets(ticker, f"{BASE_DIR}/data/preprocessed_data.csv")
+    future_market_forecaster = ForecastFutureMarkets(
+        ticker, f"{BASE_DIR}/data/preprocessed_data.csv")
 
     # Load all models
     future_market_forecaster.load_all_models()
@@ -89,15 +90,15 @@ if __name__ == "__main__":
     forecast_sarima = future_market_forecaster.forecast_sarima()
     forecast_lstm = future_market_forecaster.forecast_lstm()
 
-
-
     # Visualize the forecast
 
     # Ensure SARIMA forecast index is a datetime index
-    sarima_forecast, sarima_conf_int = future_market_forecaster.forecast_sarima(steps=180)
+    sarima_forecast, sarima_conf_int = future_market_forecaster.forecast_sarima(
+        steps=180)
 
     # Generate appropriate date index
-    sarima_index = pd.date_range(start=future_market_forecaster.data.index[-1], periods=len(sarima_forecast) + 1, freq='D')[1:]
+    sarima_index = pd.date_range(
+        start=future_market_forecaster.data.index[-1], periods=len(sarima_forecast) + 1, freq='D')[1:]
 
     # Convert SARIMA forecast into a DataFrame with correct index
     sarima_forecast = pd.Series(sarima_forecast.values, index=sarima_index)
@@ -107,16 +108,15 @@ if __name__ == "__main__":
     future_market_forecaster.visualize_forecast(forecast_arima, "ARIMA")
     future_market_forecaster.visualize_forecast(sarima_forecast, "SARIMA")
 
-
-
-
     # Analyze forecast
 
     # Ensure SARIMA forecast index is a datetime index
-    sarima_forecast, sarima_conf_int = future_market_forecaster.forecast_sarima(steps=180)
+    sarima_forecast, sarima_conf_int = future_market_forecaster.forecast_sarima(
+        steps=180)
 
     # Generate appropriate date index
-    sarima_index = pd.date_range(start=future_market_forecaster.data.index[-1], periods=len(sarima_forecast) + 1, freq='D')[1:]
+    sarima_index = pd.date_range(
+        start=future_market_forecaster.data.index[-1], periods=len(sarima_forecast) + 1, freq='D')[1:]
 
     # Convert SARIMA forecast into a DataFrame with correct index
     sarima_forecast = pd.Series(sarima_forecast.values, index=sarima_index)
@@ -130,3 +130,33 @@ if __name__ == "__main__":
     print("Analysis using LSTM forecast ...")
     future_market_forecaster.analyze_forecast(forecast_lstm)
 
+    # Pipeline processes for Portfolio Optimization
+    tickers = ["TSLA", "BND", "SPY"]
+    portfolio_optimizer = PortfolioOptimization(
+        tickers, start_date="2025-02-01")
+    portfolio_optimizer.generate_forecasts()
+    merged_forecast_df = portfolio_optimizer.merge_forecasts()
+
+    print(merged_forecast_df.head())
+
+    # Calculate covariance between the three assets
+    cova = portfolio_optimizer.calculate_covariance_matrix()
+
+    # Plot the covariance heatmap
+    portfolio_optimizer.plot_covariance_heatmap()
+    # Optimize the portfolio
+    optimal_weights = portfolio_optimizer.optimize_portfolio()
+
+    # Visualize the portfolio
+    portfolio_optimizer.visualize_portfolio(optimal_weights)
+
+    # Portfolio performance and risk analysis
+    portfolio_return, portfolio_volatility = portfolio_optimizer.portfolio_performance(
+        optimal_weights)
+    print(f"Portfolio Return: {portfolio_return * 100:.2f}%")
+    print(f"Portfolio Volatility: {portfolio_volatility * 100:.2f}%")
+
+    # Calculate Value at Risk (VaR)
+    var = portfolio_optimizer.calculate_var(
+        optimal_weights, confidence_level=0.95)
+    print(f"Portfolio Value at Risk (VaR) at 95% confidence: {var * 100:.2f}%")
